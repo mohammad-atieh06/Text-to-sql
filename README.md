@@ -13,8 +13,10 @@ This is a **feasibility prototype**. It is not the multi-component architecture 
 1. **Schema context** – the table definitions, foreign keys, 3 sample rows per table and the business rules are put into the prompt. In **Full** mode (the default) every table is sent. In **Linked** mode only the tables chosen by the schema linker are sent (see below).
 2. **Generate SQL** – Gemini returns a JSON object with the SQL and a one-sentence explanation.
 3. **Safety check** – only a single `SELECT` (or `WITH … SELECT`) is allowed; write and admin keywords are blocked (the `REPLACE()` string function is allowed; `REPLACE INTO` is not). A query that breaks this policy **stops the request** and is never sent back for repair.
-4. **Execute** – the query runs on an in-browser SQLite database (sql.js), locked with `PRAGMA query_only`, capped at 500 rows. A query that runs but returns no rows is flagged (not repaired), because execution success is not a correct answer.
-5. **Self-correct** – if SQLite returns an error, the failed SQL and the error are sent back to the model, up to 2 times. After that the request ends with an explicit failure.
+4. **Execute** – the query runs in a separate Web Worker on its own in-browser copy of the SQLite database (sql.js), locked with `PRAGMA query_only`, capped at 500 rows and stopped after **5 seconds**. A query that hits the time limit ends the request and is not retried. A query that runs but returns no rows is flagged and sent back to the model **once** to check (this counts as a repair; the idea comes from MAC-SQL's Refiner).
+5. **Self-correct** – if SQLite returns an error, the failed SQL and the error are sent back to the model, up to 2 times in total (including the empty-result check). After that the request ends with an explicit failure.
+
+The prompt also tells the model not to guess when a question depends on a vague word such as "best" with no measure; it should return no SQL and ask which measure is meant (prompt version v2, 23 Nov 2026). Exports record the prompt version of every run.
 
 ## Schema linking (optional, added 22 Nov 2026 in build 3)
 
@@ -61,7 +63,7 @@ Results are kept **separately for each schema mode**. The main evaluation is the
 1. Select **Full**, press **Run all 18**, then **Export CSV** or **Export JSON** (files are named `…-full.csv` / `…-full.json`).
 2. Optionally select **Linked**, run again and export (`…-linked.csv` / `…-linked.json`).
 
-The exports include the schema mode, the tables in the reference SQL, the linked tables, linking recall, the tables sent on the last attempt and whether the schema was expanded. Results stay in the browser until you press **Clear results (this mode)**. Results from build 2 are carried over into Full mode.
+The exports include the schema mode, the tables in the reference SQL, the linked tables, linking recall, the tables sent on the last attempt and whether the schema was expanded. The panel shows both the mean and the median response time; the median is the typical question and is not pulled up by a few slow Gemini calls. Results stay in the browser until you press **Clear results (this mode)**. Results from build 2 are carried over into Full mode.
 
 ## Limitations
 
@@ -69,10 +71,10 @@ The exports include the schema mode, the tables in the reference SQL, the linked
 - **Full-schema prompting by default:** the linked mode is a small, rule-based first step, not a general schema-linking method.
 - **Missing relationship handling:** joins rely on declared foreign keys; undeclared relationships are neither detected nor suggested.
 - **Wrong but executable queries:** the repair loop reacts only to SQL errors; a query that runs but answers the wrong question is caught only by comparison with the reference results.
-- **Prototype safety check:** a keyword filter plus a read-only database, with no statement timeout.
+- **Prototype safety check:** a keyword filter plus a read-only database and a 5-second time limit; not yet the parser-based check and restricted PostgreSQL role of the Senior design.
 
 ## Tech
 
 HTML, CSS, JavaScript · sql.js 1.10.3 (SQLite compiled to JavaScript) · Google Gemini API
 
-Build: evaluation build 3.1 (optional schema linking; retries on Gemini overload), 23 Nov 2026
+Build: evaluation build 3.5 (empty-result retry; 5 s query time limit; vague-question rule; median time), 23 Nov 2026

@@ -7,200 +7,213 @@
 <meta name="description" content="Junior Project, University of Sharjah: ask questions in plain English and get SQL results from a real SQLite database.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: a query console — ask bar on top, pipeline strip, SQL + results in the main column, schema reference in a side rail */
+/* Harbor Goods Text-to-SQL demo. Design: a quiet, legible console for a projector (Lexend: wide, easy-reading letterforms).
+   One expressive element: the five-step pipeline drawn as a connected track. */
 :root {
-  --bg: #f4f6f9; --surface: #ffffff; --ink: #151a24; --muted: #5b6476; --line: #dce1e9;
+  --bg: #f4f6f9; --surface: #ffffff; --ink: #151a24; --muted: #5b6476; --line: #dce1e9; --line-strong: #c3cad6;
   --accent: #2752c4; --accent-ink: #ffffff; --accent-soft: #e5ebfa; --code-bg: #eef1f6;
   --ok: #1d8656; --warn: #a86400; --err: #bf3434; --ok-soft: #e3f3ea; --err-soft: #fbe9e9; --warn-soft: #fbf0dd;
-  --f-display: "Schibsted Grotesk", "Segoe UI", system-ui, sans-serif;
-  --f-body: "Schibsted Grotesk", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Lexend", "Segoe UI", system-ui, sans-serif;
   --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --r-lg: 14px; --r-md: 8px; --r-sm: 5px;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #0e1219; --surface: #151b25; --ink: #e5e9f0; --muted: #96a0b3; --line: #263042;
+  --bg: #0e1219; --surface: #151b25; --ink: #e5e9f0; --muted: #96a0b3; --line: #263042; --line-strong: #34405a;
   --accent: #7d9dff; --accent-ink: #0e1219; --accent-soft: #1b2645; --code-bg: #111722;
   --ok: #4bc289; --warn: #e2a33f; --err: #f07070; --ok-soft: #14301f; --err-soft: #3a1a1c; --warn-soft: #33270f;
   color-scheme: dark; } }
-:root[data-theme="dark"] {
-  --bg: #0e1219; --surface: #151b25; --ink: #e5e9f0; --muted: #96a0b3; --line: #263042;
-  --accent: #7d9dff; --accent-ink: #0e1219; --accent-soft: #1b2645; --code-bg: #111722;
-  --ok: #4bc289; --warn: #e2a33f; --err: #f07070; --ok-soft: #14301f; --err-soft: #3a1a1c; --warn-soft: #33270f;
-  color-scheme: dark; }
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 [hidden] { display: none !important; }
-body { margin: 0; }
-body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
-.wrap { max-width: 1200px; margin: 0 auto; padding-block: 24px 48px;
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.55; }
+code { font-family: var(--f-mono); font-size: 0.9em; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 32px 56px;
+  padding-left: max(18px, env(safe-area-inset-left, 0px)); padding-right: max(18px, env(safe-area-inset-right, 0px)); }
 
-header.top { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; margin-bottom: 18px; }
-h1 { font-family: var(--f-display); font-size: 1.7rem; font-weight: 700; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
-h1 span { color: var(--accent); }
-.hgroup { display: flex; flex-direction: column; gap: 4px; min-width: 0; max-width: 720px; }
-.eyebrow { font-size: 0.74rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); }
-.team { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.88rem; }
+/* Header */
+header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 24px; margin-bottom: 22px; }
+.hgroup { display: flex; flex-direction: column; gap: 6px; min-width: 0; max-width: 680px; }
+.eyebrow { margin: 0; font-size: 0.9rem; color: var(--muted); }
+h1 { font-size: clamp(1.7rem, 4.2vw, 2.4rem); line-height: 1.1; font-weight: 600; letter-spacing: -0.015em; margin: 0; text-wrap: balance; }
+h1 span { color: inherit; }
+.team { list-style: none; margin: 2px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 20px; font-size: 0.95rem; }
 .team b { font-weight: 600; }
-.team span { font-family: var(--f-mono); font-size: 0.76rem; color: var(--muted); margin-left: 4px; }
-footer.foot { margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; font-size: 0.8rem; color: var(--muted); }
-.sub { color: var(--muted); margin: 2px 0 0; font-size: 0.95rem; }
-.dbtag { font-family: var(--f-mono); font-size: 0.78rem; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; background: var(--surface); white-space: nowrap; }
-.dbtag b { color: var(--ink); font-weight: 500; }
+.team span { color: var(--muted); margin-left: 4px; font-variant-numeric: tabular-nums; }
+.dbtag { font-size: 0.88rem; color: var(--muted); white-space: nowrap; }
+.dbtag b { color: var(--ink); font-family: var(--f-mono); font-weight: 400; font-size: 0.85rem; margin-right: 6px; }
+footer.foot { margin-top: 36px; padding-top: 14px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; font-size: 0.82rem; color: var(--muted); }
 
-.layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start; }
-@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 24px; align-items: start; }
+@media (max-width: 920px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+main { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 
-.label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+/* Small headings: sentence case, weight not caps */
+.label { font-size: 0.95rem; font-weight: 600; color: var(--ink); }
 
-/* Ask bar */
-.ask { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+/* Tap-to-open explanations */
+details.fold { font-size: 0.92rem; color: var(--muted); }
+details.fold > summary { cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 6px; color: var(--accent); font-weight: 600; padding: 2px 0; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary::before { content: ""; width: 0; height: 0; border-left: 5px solid currentColor; border-top: 4px solid transparent; border-bottom: 4px solid transparent; transition: transform .15s; }
+details.fold[open] > summary::before { transform: rotate(90deg); }
+details.fold > :not(summary) { margin: 6px 0 0; max-width: 72ch; }
+details.fold p { margin: 6px 0 0; }
+.panelfold { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 10px 14px; }
+
+/* Ask area: the one raised surface */
+.ask { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 18px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 1px 0 var(--line), 0 10px 30px -22px rgba(21, 26, 36, 0.45); }
 .askrow { display: flex; gap: 8px; flex-wrap: wrap; }
-#q { flex: 1 1 280px; min-width: 0; font: inherit; font-size: 1.02rem; padding: 11px 13px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); }
-#q:focus-visible, textarea:focus-visible, button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 9px 14px; font-weight: 500; }
-button:hover:not(:disabled) { border-color: var(--accent); }
-button:disabled { opacity: 0.5; cursor: not-allowed; }
-button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
-button.primary:hover:not(:disabled) { filter: brightness(1.08); }
-.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; font-size: 0.85rem; color: var(--muted); }
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-.seg button { border: 0; border-radius: 0; padding: 5px 11px; font-size: 0.83rem; background: transparent; color: var(--muted); }
-.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-.examples { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { font-size: 0.84rem; padding: 5px 10px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); color: var(--ink); font-weight: 400; }
-.chip:hover:not(:disabled) { background: var(--accent-soft); border-color: var(--accent); }
-.settings { border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
-.settings summary { cursor: pointer; padding: 7px 10px; font-size: 0.85rem; font-weight: 500; display: flex; gap: 8px; align-items: center; list-style: none; }
-.settings summary::-webkit-details-marker { display: none; }
-.settings summary::before { content: "▸"; color: var(--muted); display: inline-block; transition: transform .15s; }
-.settings[open] summary::before { transform: rotate(90deg); }
-.keystatus { font-size: 0.75rem; padding: 1px 8px; border-radius: 999px; background: var(--err-soft); color: var(--err); font-weight: 500; }
+#q { flex: 1 1 280px; min-width: 0; font: inherit; font-size: 1.08rem; padding: 12px 14px; border: 1.5px solid var(--line-strong); border-radius: var(--r-md); background: var(--surface); color: var(--ink); }
+#q:focus-visible, textarea:focus-visible, button:focus-visible, select:focus-visible, summary:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+button { font: inherit; cursor: pointer; border-radius: var(--r-md); border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); padding: 9px 15px; font-weight: 600; }
+button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); padding-inline: 22px; }
+button.primary:hover:not(:disabled) { color: var(--accent-ink); filter: brightness(1.1); }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: 0.92rem; color: var(--muted); }
+.controls > span:first-child { min-width: 54px; }
+.seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--r-md); overflow: hidden; }
+.seg button { border: 0; border-radius: 0; padding: 6px 14px; font-size: 0.9rem; background: transparent; color: var(--muted); }
+.seg button + button { border-left: 1px solid var(--line-strong); }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.examples, .democases { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { text-align: left; font-size: 0.9rem; padding: 6px 12px; border-radius: 999px; background: transparent; border: 1px solid var(--line-strong); color: var(--ink); font-weight: 400; }
+.chip:hover:not(:disabled) { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); }
+.chip.demochip { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.settings:not(.fold) { border: 1px solid var(--line); border-radius: var(--r-md); }
+#settings summary { cursor: pointer; padding: 8px 12px; font-size: 0.92rem; font-weight: 600; display: flex; gap: 10px; align-items: center; list-style: none; }
+#settings summary::-webkit-details-marker { display: none; }
+.keystatus { font-size: 0.78rem; padding: 1px 9px; border-radius: 999px; background: var(--err-soft); color: var(--err); font-weight: 600; }
 .keystatus.ok { background: var(--ok-soft); color: var(--ok); }
-.setbody { padding: 0 10px 10px; display: flex; flex-direction: column; gap: 8px; }
+.setbody { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px; }
 .setrow { display: flex; flex-wrap: wrap; gap: 8px; }
-.setrow input { flex: 1 1 240px; min-width: 0; font: inherit; font-family: var(--f-mono); font-size: 0.84rem; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
-.setrow input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.setrow button { padding: 7px 12px; font-size: 0.85rem; }
-.notice { font-size: 0.86rem; padding: 8px 11px; border-radius: 8px; background: var(--warn-soft); color: var(--ink); border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent); }
+.setrow input { flex: 1 1 240px; min-width: 0; font: inherit; font-family: var(--f-mono); font-size: 0.86rem; padding: 8px 10px; border: 1px solid var(--line-strong); border-radius: var(--r-md); background: var(--surface); color: var(--ink); }
+.setrow button { padding: 7px 12px; font-size: 0.88rem; }
+.notice { font-size: 0.9rem; padding: 9px 12px; border-radius: var(--r-md); background: var(--warn-soft); color: var(--ink); }
 
-/* Pipeline */
-.pipe { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
-@media (max-width: 620px) { .pipe { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pipe .step:last-child { grid-column: span 2; } }
-.step { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 0; position: relative; }
-.step .n { font-family: var(--f-mono); font-size: 0.7rem; color: var(--muted); }
-.step .t { font-weight: 600; font-size: 0.9rem; }
-.step .d { font-size: 0.76rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.step[data-s="active"] { border-color: var(--accent); background: var(--accent-soft); }
-.step[data-s="active"] .t::after { content: ""; display: inline-block; width: 6px; height: 6px; margin-left: 6px; border-radius: 50%; background: var(--accent); vertical-align: middle; animation: pulse 1s ease-in-out infinite; }
-.step[data-s="done"] { border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); }
-.step[data-s="done"] .n { color: var(--ok); }
-.step[data-s="error"] { border-color: var(--err); background: var(--err-soft); }
-.step[data-s="error"] .n { color: var(--err); }
-.step[data-s="skip"] { opacity: 0.55; }
-@keyframes pulse { 50% { opacity: 0.25; } }
-@media (prefers-reduced-motion: reduce) { .step[data-s="active"] .t::after { animation: none; } }
+/* Pipeline: a connected track. This is the page's one expressive element. */
+.pipe { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; padding: 6px 0 2px; }
+.pipe::before { content: ""; position: absolute; left: 10%; right: 10%; top: 25px; height: 2px; background: var(--line-strong); }
+.step { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 6px; min-width: 0; }
+.step .n { position: relative; z-index: 1; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 600; font-size: 1rem; background: var(--bg); color: var(--muted); border: 2px solid var(--line-strong); margin-bottom: 8px; transition: background .2s, border-color .2s, color .2s; }
+.step .t { font-weight: 600; font-size: 0.95rem; line-height: 1.25; }
+.step .d { font-size: 0.8rem; color: var(--muted); line-height: 1.3; margin-top: 2px; overflow-wrap: anywhere; }
+.step[data-s="active"] .n { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); animation: ring 1.1s ease-in-out infinite; }
+.step[data-s="done"] .n { background: var(--ok); border-color: var(--ok); color: var(--surface); }
+.step[data-s="error"] .n { background: var(--err); border-color: var(--err); color: var(--surface); }
+.step[data-s="error"] .d { color: var(--err); }
+.step[data-s="skip"] { opacity: 0.5; }
+.step[data-s="skip"] .n { border-style: dashed; }
+@keyframes ring { 50% { box-shadow: 0 0 0 6px var(--accent-soft); } }
+@media (prefers-reduced-motion: reduce) { .step[data-s="active"] .n { animation: none; } }
+@media (max-width: 620px) {
+  .pipe { grid-template-columns: 1fr; gap: 10px; padding-left: 2px; }
+  .pipe::before { left: 21px; right: auto; top: 20px; bottom: 20px; width: 2px; height: auto; }
+  .step { flex-direction: row; align-items: center; text-align: left; gap: 12px; padding: 0; }
+  .step .n { margin: 0; flex: none; }
+  .step .t { min-width: 110px; }
+}
 
-/* Panels */
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; min-width: 0; }
-.phead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
-.phead .meta { font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-.pbody { padding: 12px 14px; }
-.explain { margin: 0 0 10px; font-size: 0.93rem; }
+/* Panels: flat sections, no shadow */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); min-width: 0; }
+.phead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; padding: 12px 16px 8px; }
+.phead .meta { font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pbody { padding: 4px 16px 16px; }
+.explain { margin: 0 0 10px; font-size: 1rem; max-width: 72ch; }
 .explain:empty { display: none; }
-textarea#sql { width: 100%; min-height: 150px; resize: vertical; font-family: var(--f-mono); font-size: 0.84rem; line-height: 1.55; padding: 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--code-bg); color: var(--ink); tab-size: 2; white-space: pre; overflow: auto; }
+textarea#sql { width: 100%; min-height: 140px; resize: vertical; font-family: var(--f-mono); font-size: 0.88rem; line-height: 1.6; padding: 12px 14px; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--code-bg); color: var(--ink); tab-size: 2; white-space: pre; overflow: auto; }
 .row-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
-.log { margin: 10px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; font-size: 0.82rem; }
-.log li { display: flex; gap: 8px; align-items: baseline; }
-.log li .k { font-family: var(--f-mono); font-size: 0.72rem; padding: 1px 6px; border-radius: 4px; background: var(--bg); color: var(--muted); flex: none; }
+.log { margin: 12px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; font-size: 0.88rem; }
+.log li { display: flex; gap: 10px; align-items: baseline; }
+.log li .k { font-size: 0.76rem; font-weight: 600; padding: 1px 7px; border-radius: var(--r-sm); background: var(--code-bg); color: var(--muted); flex: none; min-width: 58px; text-align: center; }
 .log li.err .k { background: var(--err-soft); color: var(--err); }
 .log li.ok .k { background: var(--ok-soft); color: var(--ok); }
 .log li.warn .k { background: var(--warn-soft); color: var(--warn); }
-.attempts { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
-.attempt { border: 1px solid var(--line); border-radius: 8px; background: var(--bg); padding: 8px 10px; min-width: 0; }
-.attempt.bad { border-color: color-mix(in srgb, var(--err) 45%, var(--line)); }
-.attempt.good { border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); }
-.attempt .ah { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; font-size: 0.82rem; }
+.log li .m { min-width: 0; overflow-wrap: anywhere; }
+.attempts { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.attempt { border-left: 3px solid var(--line-strong); background: var(--code-bg); padding: 8px 12px; border-radius: 0 var(--r-sm) var(--r-sm) 0; min-width: 0; }
+.attempt.bad { border-left-color: var(--err); }
+.attempt.good { border-left-color: var(--ok); }
+.attempt .ah { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: 0.88rem; }
 .attempt .ah b { font-weight: 600; }
 .attempt .ae { color: var(--err); overflow-wrap: anywhere; }
-.attempt pre { font-family: var(--f-mono); font-size: 0.76rem; margin: 6px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--muted); }
-.democases { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip.demochip { border-color: var(--accent); background: var(--accent-soft); font-weight: 500; }
-.log li .m { min-width: 0; overflow-wrap: anywhere; }
+.attempt pre { font-family: var(--f-mono); font-size: 0.8rem; margin: 6px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--muted); }
 
 .tablewrap { overflow: auto; max-height: 460px; }
-table { border-collapse: collapse; width: 100%; font-size: 0.86rem; font-variant-numeric: tabular-nums; }
-th, td { padding: 7px 12px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
-th { position: sticky; top: 0; background: var(--surface); font-family: var(--f-mono); font-size: 0.74rem; font-weight: 500; color: var(--muted); z-index: 1; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 8px 14px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { position: sticky; top: 0; background: var(--surface); font-size: 0.82rem; font-weight: 600; color: var(--muted); z-index: 1; }
 td.num, th.num { text-align: right; }
-tbody tr:hover td { background: var(--bg); }
-.empty { padding: 28px 14px; color: var(--muted); text-align: center; font-size: 0.9rem; }
-.msg { padding: 14px; font-size: 0.9rem; }
+tbody tr:hover td { background: var(--code-bg); }
+.empty { padding: 30px 16px; color: var(--muted); text-align: center; font-size: 0.95rem; }
+.msg { padding: 14px 16px; font-size: 0.95rem; }
 .msg.err { color: var(--err); }
 
-.bars { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-top: 1px solid var(--line); }
-.bar { display: grid; grid-template-columns: minmax(0, 170px) minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: 0.8rem; }
+.bars { display: flex; flex-direction: column; gap: 6px; padding: 12px 16px 16px; border-top: 1px solid var(--line); }
+.bars .label { margin-bottom: 4px; }
+.bar { display: grid; grid-template-columns: minmax(0, 170px) minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: 0.85rem; }
 .bar .bl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
-.bar .track { height: 12px; background: var(--bg); border-radius: 3px; overflow: hidden; }
-.bar .fill { height: 100%; background: var(--accent); border-radius: 3px; }
-.bar .bv { font-variant-numeric: tabular-nums; font-family: var(--f-mono); font-size: 0.75rem; }
+.bar .track { height: 10px; background: var(--code-bg); border-radius: 2px; overflow: hidden; }
+.bar .fill { height: 100%; background: var(--accent); }
+.bar .bv { font-variant-numeric: tabular-nums; font-size: 0.82rem; }
 @media (max-width: 520px) { .bar { grid-template-columns: minmax(0, 100px) minmax(0, 1fr) auto; } }
 
 /* Schema rail */
 aside { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-aside .panel .pbody { display: flex; flex-direction: column; gap: 10px; }
-details.tbl { border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
-details.tbl.linked { border-color: var(--accent); background: var(--accent-soft); }
+aside .panel .pbody { display: flex; flex-direction: column; gap: 6px; }
+details.tbl { border-radius: var(--r-sm); border-left: 3px solid transparent; }
+details.tbl.linked { border-left-color: var(--accent); background: var(--accent-soft); }
 details.tbl.linked summary > span:first-child { color: var(--accent); font-weight: 600; }
-details.tbl summary { cursor: pointer; padding: 7px 10px; font-family: var(--f-mono); font-size: 0.82rem; font-weight: 500; display: flex; justify-content: space-between; gap: 8px; list-style: none; }
+details.tbl summary { cursor: pointer; padding: 6px 8px; font-family: var(--f-mono); font-size: 0.85rem; display: flex; justify-content: space-between; gap: 8px; list-style: none; }
 details.tbl summary::-webkit-details-marker { display: none; }
-details.tbl summary::before { content: "▸"; color: var(--muted); margin-right: 6px; transition: transform .15s; display: inline-block; }
-details.tbl[open] summary::before { transform: rotate(90deg); }
-details.tbl summary .c { color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; margin-left: auto; }
-.cols { list-style: none; margin: 0; padding: 0 10px 8px 26px; font-family: var(--f-mono); font-size: 0.75rem; display: flex; flex-direction: column; gap: 2px; }
+details.tbl summary .c { color: var(--muted); font-family: var(--f-body); font-size: 0.8rem; font-variant-numeric: tabular-nums; margin-left: auto; }
+.cols { list-style: none; margin: 0; padding: 0 8px 8px 16px; font-family: var(--f-mono); font-size: 0.78rem; display: flex; flex-direction: column; gap: 2px; }
 .cols li { display: flex; justify-content: space-between; gap: 8px; }
 .cols .ty { color: var(--muted); }
 .cols .fk { color: var(--accent); }
-.rules { margin: 0; padding-left: 18px; font-size: 0.82rem; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
-.rules b { color: var(--ink); font-weight: 600; }
-.small { font-size: 0.8rem; color: var(--muted); margin: 0; }
+.rules { margin: 6px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.rules b { color: var(--ink); }
+.small { font-size: 0.86rem; color: var(--muted); margin: 0; }
 
 /* Evaluation panel */
-.evalpanel { margin-top: 20px; }
-.evalbody { display: flex; flex-direction: column; gap: 12px; }
-.evalsum { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
-.stat { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--bg); min-width: 0; }
-.stat .v { font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-.stat .k { font-size: 0.75rem; color: var(--muted); }
-.evaltable { max-height: none; border: 1px solid var(--line); border-radius: 8px; }
+.evalpanel { margin-top: 26px; }
+.evalbody { display: flex; flex-direction: column; gap: 14px; }
+.evalsum { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0; border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+.stat { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 10px 12px; min-width: 0; }
+.stat .v { font-size: 1.45rem; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.stat .k { font-size: 0.8rem; color: var(--muted); line-height: 1.35; margin-top: 2px; }
+.evaltable { max-height: none; border: 1px solid var(--line); border-radius: var(--r-sm); }
 .evaltable td { white-space: normal; vertical-align: top; }
 .evaltable td.q { min-width: 240px; }
 .evaltable details summary { cursor: pointer; }
-.evaltable details pre { font-family: var(--f-mono); font-size: 0.74rem; background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px; margin: 6px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
-.evaltable details .lbl { display: block; margin-top: 8px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-.evaltable tr.group td { background: var(--bg); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-.pill { display: inline-block; font-size: 0.74rem; padding: 1px 8px; border-radius: 999px; background: var(--bg); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
-.pill.ok { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
-.pill.bad { background: var(--err-soft); color: var(--err); border-color: transparent; }
-.pill.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
-.evaltable select { font: inherit; font-size: 0.78rem; margin-top: 4px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); padding: 2px 4px; }
-.evaltable button { padding: 4px 10px; font-size: 0.8rem; white-space: nowrap; }
+.evaltable details pre { font-family: var(--f-mono); font-size: 0.78rem; background: var(--code-bg); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 8px; margin: 6px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.evaltable details .lbl { display: block; margin-top: 8px; font-size: 0.8rem; font-weight: 600; color: var(--muted); }
+.evaltable tr.group td { background: var(--code-bg); font-size: 0.85rem; font-weight: 600; color: var(--muted); }
+.pill { display: inline-block; font-size: 0.78rem; font-weight: 600; padding: 1px 9px; border-radius: 999px; background: var(--code-bg); color: var(--muted); white-space: nowrap; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.bad { background: var(--err-soft); color: var(--err); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.evaltable select { font: inherit; font-size: 0.8rem; margin-top: 4px; border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--surface); color: var(--ink); padding: 2px 4px; }
+.evaltable button { padding: 4px 10px; font-size: 0.82rem; white-space: nowrap; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="top">
     <div class="hgroup">
-      <div class="eyebrow">Junior Project · University of Sharjah</div>
-      <h1>Text-to-SQL over a <span>Real Database</span></h1>
-      <p class="sub">Ask a question in plain English. A language model turns it into SQL, then the system checks the query and runs it on a real SQLite database.</p>
+      <p class="eyebrow">Junior Project, University of Sharjah</p>
+      <h1>Text-to-SQL over a real database</h1>
       <ul class="team" aria-label="Team">
         <li><b>Murtadha Hasan</b> <span>U23106466</span></li>
         <li><b>Mohammad Ahmad</b> <span>U23106325</span></li>
       </ul>
+      <details class="fold">
+        <summary>About this demo</summary>
+        <p>Ask a question in plain English. Gemini writes one SQL query, the page checks that the query only reads data, runs it on a SQLite copy of a small online store, and, if it fails, sends the error back to Gemini to fix it (at most twice).</p>
+      </details>
     </div>
     <div class="dbtag" id="dbtag">loading database…</div>
   </header>
@@ -220,7 +233,6 @@ details.tbl summary .c { color: var(--muted); font-weight: 400; font-variant-num
             <button type="button" id="m-quick" aria-pressed="true">Fast</button>
             <button type="button" id="m-default" aria-pressed="false">Accurate</button>
           </div>
-          <span id="modelnote">Fast: Gemini Flash-Lite. Accurate: Gemini Flash.</span>
         </div>
         <div class="controls">
           <span>Schema</span>
@@ -228,8 +240,11 @@ details.tbl summary .c { color: var(--muted); font-weight: 400; font-variant-num
             <button type="button" id="s-full" aria-pressed="true">Full</button>
             <button type="button" id="s-linked" aria-pressed="false">Linked</button>
           </div>
-          <span id="schemanote">Full: the whole schema goes into the prompt (evaluation default). Linked: only the tables chosen by the schema linker (experimental).</span>
         </div>
+        <details class="fold">
+          <summary>What do these options mean?</summary>
+          <p><b>Fast</b> uses Gemini Flash-Lite and <b>Accurate</b> uses Gemini Flash. <b>Full</b> sends every table to the model and is the mode used for the main evaluation. <b>Linked</b> sends only the tables the schema linker picks for the question (experimental).</p>
+        </details>
         <details class="settings" id="settings">
           <summary>Gemini API key <span class="keystatus" id="keystatus">not set</span></summary>
           <div class="setbody">
@@ -243,11 +258,11 @@ details.tbl summary .c { color: var(--muted); font-weight: 400; font-variant-num
         </details>
         <div class="notice" id="nosample" hidden>Add a Gemini API key above to ask your own questions. The example questions below still run, using SQL saved with each example, and you can edit SQL by hand.</div>
         <div>
-          <div class="label" style="margin-bottom:6px">Presentation demo · three live cases (LLM)</div>
+          <div class="label" style="margin-bottom:6px">Presentation demo: three live cases</div>
           <div class="democases" id="democases"></div>
         </div>
         <div>
-          <div class="label" style="margin-bottom:6px">Built-in examples (hand-written SQL, not LLM; demo only)</div>
+          <div class="label" style="margin-bottom:6px">Built-in examples <span class="small">hand-written SQL, not counted in the evaluation</span></div>
           <div class="examples" id="examples"></div>
         </div>
       </section>
@@ -257,8 +272,8 @@ details.tbl summary .c { color: var(--muted); font-weight: 400; font-variant-num
           <div class="step" data-k="context"><div class="n">1</div><div class="t">Schema context</div><div class="d">tables, keys, sample rows</div></div>
           <div class="step" data-k="generate"><div class="n">2</div><div class="t">Generate SQL</div><div class="d">LLM: question → SQLite</div></div>
           <div class="step" data-k="validate"><div class="n">3</div><div class="t">Safety check</div><div class="d">SELECT only, one statement</div></div>
-          <div class="step" data-k="execute"><div class="n">4</div><div class="t">Execute</div><div class="d">read-only, 500-row cap</div></div>
-          <div class="step" data-k="repair"><div class="n">5</div><div class="t">Self-correct</div><div class="d">error → LLM, up to 2 tries</div></div>
+          <div class="step" data-k="execute"><div class="n">4</div><div class="t">Execute</div><div class="d">read-only, 5 s limit</div></div>
+          <div class="step" data-k="repair"><div class="n">5</div><div class="t">Self-correct</div><div class="d">error or 0 rows → LLM, up to 2 tries</div></div>
         </div>
       </section>
 
@@ -289,32 +304,33 @@ details.tbl summary .c { color: var(--muted); font-weight: 400; font-variant-num
         <div class="phead"><span class="label">Schema</span><span class="meta" id="schemameta"></span></div>
         <div class="pbody" id="schema"></div>
       </section>
-      <section class="panel" aria-label="Business rules">
-        <div class="phead"><span class="label">Business rules in the prompt</span></div>
-        <div class="pbody">
-          <ul class="rules">
-            <li><b>Revenue</b> is quantity × unit price, excluding cancelled and returned orders.</li>
-            <li><b>Today</b> is 2026-10-30, so "last quarter" means Jul–Sep 2026.</li>
-            <li>Dates are ISO text (YYYY-MM-DD).</li>
-          </ul>
-          <p class="small">Each viewer gets a fresh in-memory copy of the database, locked with <code>PRAGMA query_only</code>.</p>
-        </div>
-      </section>
-      <section class="panel" aria-label="Schema linker">
-        <div class="phead"><span class="label">Schema linker (rule-based)</span></div>
-        <div class="pbody">
-          <p class="small">Matches the question against table names, column names, exact values in text columns and a short list of business terms, then adds the tables on the shortest declared foreign-key path between them. Undeclared joins are never invented. Highlighted tables are the ones linked for the last question.</p>
-          <p class="small">If a query fails with "no such table" or "no such column", the linked set is expanded by one foreign-key hop before the repair (Linked mode only).</p>
-        </div>
-      </section>
+      <details class="fold panelfold">
+        <summary>Business rules sent to the model</summary>
+        <ul class="rules">
+          <li><b>Revenue</b> is quantity × unit price, excluding cancelled and returned orders.</li>
+          <li><b>Today</b> is 2026-10-30, so "last quarter" means July to September 2026.</li>
+          <li>Dates are ISO text (YYYY-MM-DD).</li>
+        </ul>
+        <p>Each viewer gets a fresh in-memory copy of the database, locked with <code>PRAGMA query_only</code>.</p>
+      </details>
+      <details class="fold panelfold">
+        <summary>How the schema linker works</summary>
+        <p>It matches the question against table names, column names, exact values in text columns and a short list of business terms, then adds the tables on the shortest declared foreign-key path between them. It never invents joins. Highlighted tables are the ones linked for the last question.</p>
+        <p>If a query fails with "no such table" or "no such column", the linked set grows by one foreign-key hop before the repair (Linked mode only).</p>
+      </details>
     </aside>
   </div>
 
   <section class="panel evalpanel" aria-label="Evaluation run">
-    <div class="phead"><span class="label">Evaluation run · 15 test questions + 3 controlled repair tests</span><span class="meta" id="evalmeta"></span></div>
+    <div class="phead"><span class="label">Evaluation run: 15 test questions and 3 controlled repair tests</span><span class="meta" id="evalmeta"></span></div>
     <div class="pbody evalbody">
-      <p class="small">Reference SQL and expected results were fixed on 22 Nov 2026, before any LLM run. Expected results are computed live from the reference SQL. A result counts as correct when it has the same rows as the expected result (row order ignored, numbers rounded to 2 decimals, extra columns allowed). The built-in examples above are hand-written and are not part of this evaluation.</p>
-      <p class="small">Results are kept separately for each schema mode. <b id="evalmode">Full schema</b> is selected; switch the Schema control above to see or run the other mode. The Linking column is computed without the LLM: it checks whether the linker picked every table used by the reference SQL (strict recall).</p>
+      <details class="fold howscore">
+        <summary>How scoring works</summary>
+        <div>
+          <p class="small">Reference SQL and expected results were fixed on 22 Nov 2026, before any LLM run. Expected results are computed live from the reference SQL. A result counts as correct when it has the same rows as the expected result (row order ignored, numbers rounded to 2 decimals, extra columns allowed). The built-in examples above are hand-written and are not part of this evaluation.</p>
+          <p class="small">Results are kept separately for each schema mode. <b id="evalmode">Full schema</b> is selected; switch the Schema control above to see or run the other mode. The Linking column is computed without the LLM: it checks whether the linker picked every table used by the reference SQL (strict recall).</p>
+        </div>
+      </details>
       <div class="evalsum" id="evalsum"></div>
       <div class="row-actions">
         <button type="button" class="primary" id="runall">Run all 18</button>
@@ -336,7 +352,7 @@ details.tbl summary .c { color: var(--muted); font-weight: 400; font-variant-num
 
   <footer class="foot">
     <span>Text-to-SQL over a Real Database · Junior Project, University of Sharjah</span>
-    <span>Murtadha Hasan · Mohammad Ahmad · evaluation build 3.1 (optional schema linking; retries on Gemini overload), 23 Nov 2026</span>
+    <span>Murtadha Hasan · Mohammad Ahmad · evaluation build 3.5 (empty-result retry; 5 s query time limit; vague-question rule; median time), 23 Nov 2026</span>
   </footer>
 </div>
 
@@ -478,7 +494,7 @@ const LINK_TERMS = [
   [["placed"], ["orders"]],
   [["reviewer", "rated"], ["customers", "reviews"]],
   [["expensive", "cheap", "cheapest"], ["products"]],
-  [["live", "lives"], ["customers"]],
+  [["live"], ["customers"]],
 ];
 const DATE_WORDS = /\b(january|february|march|april|june|july|august|september|october|november|december|20\d\d)\b/i;
 
@@ -835,7 +851,7 @@ function setStep(k, s, d) {
   el.dataset.s = s || "";
   if (d !== undefined) el.querySelector(".d").textContent = d;
 }
-const STEP_DEFAULTS = { context: "tables, keys, sample rows", generate: "LLM: question → SQLite", validate: "SELECT only, one statement", execute: "read-only, 500-row cap", repair: "error → LLM, up to 2 tries" };
+const STEP_DEFAULTS = { context: "tables, keys, sample rows", generate: "LLM: question → SQLite", validate: "SELECT only, one statement", execute: "read-only, 5 s limit", repair: "error or 0 rows → LLM, up to 2 tries" };
 function resetSteps() { for (const k in STEP_DEFAULTS) setStep(k, "", STEP_DEFAULTS[k]); }
 
 function log(kind, text, cls) {
@@ -862,6 +878,59 @@ function validate(sql) {
 
 // ---------- Execute ----------
 const MAX_ROWS = 500;
+const TIME_LIMIT_MS = 5000;   // statement time limit (Section 7.1.4); a timeout ends the request (Table 23)
+
+// Generated SQL runs in a separate Web Worker holding its own read-only copy of the database.
+// If a query runs longer than TIME_LIMIT_MS, the worker is terminated and replaced, which really stops it.
+// If workers are unavailable, the page falls back to running on the main thread without a time limit.
+let sandbox = null, sandboxBytes = null, sandboxSeq = 0;
+const SANDBOX_SRC = `
+let db = null;
+onmessage = e => {
+  const m = e.data;
+  if (m.type === "init") {
+    try { importScripts(m.lib); initSqlJs().then(SQL => { db = new SQL.Database(m.bytes); db.exec("PRAGMA query_only = ON;"); postMessage({ type: "ready" }); }, err => postMessage({ type: "fail", error: String(err) })); }
+    catch (err) { postMessage({ type: "fail", error: String(err) }); }
+    return;
+  }
+  const t0 = performance.now();
+  try {
+    const stmt = db.prepare(m.sql);
+    try {
+      const cols = stmt.getColumnNames(), rows = []; let capped = false;
+      while (stmt.step()) { if (rows.length >= m.maxRows) { capped = true; break; } rows.push(stmt.get()); }
+      postMessage({ id: m.id, ok: true, res: { cols, rows, capped, ms: performance.now() - t0 } });
+    } finally { stmt.free(); }
+  } catch (err) { postMessage({ id: m.id, ok: false, error: String(err && err.message || err) }); }
+};`;
+function sqlLibUrl() {
+  const s = [...document.scripts].map(x => x.src).find(u => /sql-asm\.js/.test(u));
+  return s || "https://cdn.jsdelivr.net/npm/sql.js@1.10.3/dist/sql-asm.js";
+}
+function startSandbox() {
+  return new Promise(resolve => {
+    let w;
+    try { w = new Worker(URL.createObjectURL(new Blob([SANDBOX_SRC], { type: "text/javascript" }))); }
+    catch { return resolve(null); }
+    const t = setTimeout(() => { w.terminate(); resolve(null); }, 15000);
+    w.onmessage = e => { if (e.data.type === "ready") { clearTimeout(t); resolve(w); } else if (e.data.type === "fail") { clearTimeout(t); w.terminate(); resolve(null); } };
+    w.onerror = () => { clearTimeout(t); resolve(null); };
+    w.postMessage({ type: "init", lib: sqlLibUrl(), bytes: sandboxBytes });
+  });
+}
+async function executeSandboxed(sql) {
+  if (!sandbox) return execute(sql);   // fallback: no worker available
+  const w = sandbox, id = ++sandboxSeq;
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => {
+      w.terminate(); sandbox = null;
+      startSandbox().then(nw => { sandbox = nw; });
+      reject({ timeout: true, message: `Query stopped: it ran longer than the ${TIME_LIMIT_MS / 1000} s time limit.` });
+    }, TIME_LIMIT_MS);
+    w.onmessage = e => { if (e.data.id !== id) return; clearTimeout(t); e.data.ok ? resolve(e.data.res) : reject(new Error(e.data.error)); };
+    w.postMessage({ id, sql, maxRows: MAX_ROWS });
+  });
+}
 function execute(sql) {
   const t0 = performance.now();
   const stmt = db.prepare(sql);
@@ -923,21 +992,26 @@ function showError(msg) {
 }
 
 // Validate + execute one SQL string; returns {ok, res} or {ok:false, error, stage}
-function runSQL(sql) {
+async function runSQL(sql) {
   setStep("validate", "active");
   const v = validate(sql);
   if (!v.ok) { setStep("validate", "error", v.reason); log("check", v.reason, "err"); return { ok: false, error: v.reason, stage: "validate" }; }
   setStep("validate", "done", "passed");
   setStep("execute", "active");
   try {
-    const res = execute(v.sql);
+    const res = await executeSandboxed(v.sql);
     const empty = res.rows.length === 0;
     setStep("execute", "done", empty ? "0 rows · flagged" : `${res.rows.length}${res.capped ? "+" : ""} rows · ${res.ms.toFixed(0)} ms`);
     log("run", `Returned ${res.rows.length}${res.capped ? "+" : ""} rows in ${res.ms.toFixed(1)} ms.`, "ok");
-    if (empty) log("flag", "Empty result: the query ran but returned no rows. Execution success is not a correct answer, so check the SQL. (Flagged only; not repaired.)", "warn");
+    if (empty) log("flag", "Empty result: the query ran but returned no rows. Execution success is not a correct answer, so check the SQL.", "warn");
     renderResults(res);
     return { ok: true, res };
   } catch (e) {
+    if (e && e.timeout) {
+      setStep("execute", "error", `stopped after ${TIME_LIMIT_MS / 1000} s`);
+      log("timeout", e.message, "err");
+      return { ok: false, error: e.message, stage: "timeout" };
+    }
     const msg = String(e && e.message || e);
     setStep("execute", "error", msg.slice(0, 60));
     log("sqlite", msg, "err");
@@ -985,6 +1059,7 @@ QUERY RULES:
 - Round money to 2 decimals with ROUND(x, 2).
 - Order results in the most useful way. Add LIMIT 100 unless the result is naturally small.
 - If the question can't be answered from this schema, set "sql" to "" and say why in "explanation".
+- If the question depends on a vague word such as "best", "top", "good" or "popular" and does not say how to measure it (and the business rules do not define it), do not guess: set "sql" to "" and, in "explanation", ask which measure the user means (for example total spend or number of orders).
 `;
   for (const a of prev) p += `\nA PREVIOUS ATTEMPT FAILED.\nSQL:\n${a.sql}\nERROR: ${a.error}\nFix the query.\n`;
   p += `\nQUESTION: ${question}
@@ -1021,6 +1096,7 @@ function setBusy(b) {
 }
 
 const MAX_REPAIRS = 2;
+const PROMPT_VERSION = "v2 (23 Nov 2026): asks instead of guessing on vague words such as \"best\"";
 const sleep = (ms, signal) => new Promise((res, rej) => {
   const t = setTimeout(res, ms);
   signal?.addEventListener("abort", () => { clearTimeout(t); rej(llmError("cancelled", "Stopped")); }, { once: true });
@@ -1047,7 +1123,7 @@ async function callLLM(prompt, signal, useCache, rec) {
 // One request through the pipeline. Returns a record of every attempt.
 // opts.inject: a faulty query that replaces the first LLM attempt (controlled repair test).
 async function runPipeline(question, opts = {}) {
-  const rec = { question, model: MODELS[tier], schemaMode, startedAt: new Date().toISOString(), attempts: [], status: "", executed: false, repairs: 0, totalMs: 0, waitMs: 0, error: "", explanation: "", result: null, linkedTables: [], promptTables: [], expanded: false };
+  const rec = { question, model: MODELS[tier], promptVersion: PROMPT_VERSION, schemaMode, startedAt: new Date().toISOString(), attempts: [], status: "", executed: false, repairs: 0, totalMs: 0, waitMs: 0, error: "", explanation: "", result: null, linkedTables: [], promptTables: [], expanded: false };
   resetSteps(); $("log").innerHTML = ""; $("explain").textContent = ""; $("sqlmeta").textContent = "";
   $("results").innerHTML = '<div class="empty">Waiting for a query…</div>'; $("bars").hidden = true; $("resmeta").textContent = "";
   $("sql").value = ""; renderAttempts(null);
@@ -1098,7 +1174,16 @@ async function runPipeline(question, opts = {}) {
         showError(explanation || "The model couldn't map this question to the schema.");
         return finish("abstained", explanation);
       }
-      const r = runSQL(sql);
+      const r = await runSQL(sql);
+      if (r.ok && r.res.rows.length === 0 && attempt < MAX_REPAIRS && !rec.emptyRetried) {
+        // Empty result (idea from MAC-SQL's Refiner): ask the model once to check the query. Counts as a repair.
+        att.outcome = "empty"; rec.emptyRetried = true;
+        log("retry", "Empty result: sending the query back once so the model can check it (counts as a repair).", "warn");
+        prev.push({ sql, error: "The query ran without an error but returned 0 rows. If the question should return rows, fix the query. If an empty answer is correct, return the same query." });
+        renderAttempts(rec);
+        setStep("validate", ""); setStep("execute", "");
+        continue;
+      }
       if (r.ok) {
         att.outcome = "success";
         rec.executed = true;
@@ -1108,6 +1193,13 @@ async function runPipeline(question, opts = {}) {
         return finish("executed");
       }
       att.error = r.error;
+      if (r.stage === "timeout") {
+        // A timeout is a final failure in the first version (Table 23); it is not retried.
+        att.outcome = "timeout";
+        setStep("repair", "skip", "stopped: time limit");
+        showError(`${r.error} Timeouts end the request and are not retried.`);
+        return finish("timeout_stopped", r.error);
+      }
       if (r.stage === "validate") {
         // Policy violations end the request. They are never sent back for repair.
         att.outcome = "policy_rejected";
@@ -1147,7 +1239,7 @@ async function runPipeline(question, opts = {}) {
   } finally { ctl = null; }
 }
 
-const OUTCOME_TEXT = { success: "ran successfully", sql_error: "SQL error", policy_rejected: "stopped by the safety policy", abstained: "declined (no SQL)" };
+const OUTCOME_TEXT = { empty: "ran, 0 rows (sent back once)", timeout: "stopped by the time limit", success: "ran successfully", sql_error: "SQL error", policy_rejected: "stopped by the safety policy", abstained: "declined (no SQL)" };
 // Shows every attempt of a request when there was more than one, or when the first one failed.
 function renderAttempts(rec) {
   const box = $("attempts"); box.innerHTML = "";
@@ -1190,7 +1282,7 @@ async function ask(question) {
   finally { setBusy(false); }
 }
 
-function runExample(ex) {
+async function runExample(ex) {
   if (busy) return;
   $("q").value = ex.q;
   resetSteps(); $("log").innerHTML = ""; renderAttempts(null); markLinked([]);
@@ -1198,16 +1290,16 @@ function runExample(ex) {
   setStep("generate", "skip", "saved SQL used"); setStep("repair", "skip", "not needed");
   $("explain").textContent = ex.explain; $("sql").value = ex.sql; $("sqlmeta").textContent = "saved example";
   log("example", "Hand-written SQL saved with this example (not generated by the LLM).");
-  runSQL(ex.sql);
+  await runSQL(ex.sql);
 }
 
-function runManual() {
+async function runManual() {
   if (busy || !db) return;
   resetSteps(); $("log").innerHTML = ""; renderAttempts(null); markLinked([]);
   setStep("context", "skip", "not needed"); setStep("generate", "skip", "written by hand"); setStep("repair", "skip", "manual run");
   $("explain").textContent = ""; $("sqlmeta").textContent = "edited by hand";
   log("manual", "Running your SQL.");
-  const r = runSQL($("sql").value);
+  const r = await runSQL($("sql").value);
   if (!r.ok) showError(r.error);
 }
 
@@ -1272,10 +1364,11 @@ function finalCorrect(t) {
 
 const STATUS_LABEL = {
   executed: ["Executed", "ok"], abstained: ["Declined (no SQL)", "warn"], policy_stopped: ["Stopped: policy", "warn"],
-  failed_after_repairs: ["Failed after 2 repairs", "bad"], llm_error: ["Gemini error · not scored", "warn"], stopped: ["Stopped", ""]
+  failed_after_repairs: ["Failed after 2 repairs", "bad"], timeout_stopped: ["Stopped: time limit", "bad"], llm_error: ["Gemini error · not scored", "warn"], stopped: ["Stopped", ""]
 };
 const pill = (text, cls) => { const s = document.createElement("span"); s.className = "pill" + (cls ? " " + cls : ""); s.textContent = text; return s; };
 
+const median = a => { const s = [...a].sort((p, q) => p - q), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 function renderEvalSummary() {
   const E = cur();
   const llm = TESTS.filter(t => !isRepairTest(t)), answerable = llm.filter(t => !expectsRefusal(t)), refuse = llm.filter(expectsRefusal), rep = TESTS.filter(isRepairTest);
@@ -1292,6 +1385,7 @@ function renderEvalSummary() {
     [`${repFixed} / ${rep.length}`, "Controlled repair tests executed after repair"],
     [`${correct(rep)} / ${rep.length}`, "Controlled repair tests correct after repair"],
     [times.length ? (times.reduce((a, b) => a + b, 0) / times.length / 1000).toFixed(1) + " s" : "–", "Mean response time per question"],
+    [times.length ? (median(times) / 1000).toFixed(1) + " s" : "–", "Median response time (typical question; not pulled up by slow Gemini moments)"],
     [`${linkOk} / ${answerable.length}`, "Schema-linking recall (rule-based, no LLM) · 12 answerable"],
     [`${notScored}`, "Not scored: Gemini error (overload or network). Use “Re-run not scored”"],
   ];
@@ -1388,8 +1482,8 @@ function evalRows() {
       reference: t.ref || "(decline expected)", expected_rows: t.expectedRes ? t.expectedRes.rows.length : "",
       ref_tables: t.refTables.join(" "), linked_tables: t.link.result.tables.join(" "),
       link_recall_strict: t.refTables.length ? (t.link.recall ? "yes" : "no") : "",
-      injected_sql: t.inject || "", model: r?.model || "", started_at: r?.startedAt || "",
-      prompt_tables_last_attempt: r ? (r.promptTables || []).join(" ") : "", schema_expanded: r ? (r.expanded ? "yes" : "no") : "",
+      injected_sql: t.inject || "", model: r?.model || "", prompt_version: r ? (r.promptVersion || "v1 (22 Nov 2026)") : "", started_at: r?.startedAt || "",
+      prompt_tables_last_attempt: r ? (r.promptTables || []).join(" ") : "", schema_expanded: r ? (r.expanded ? "yes" : "no") : "", empty_result_retry: r ? (r.emptyRetried ? "yes" : "no") : "",
       final_sql: last?.sql || "", attempts: r ? r.attempts.map(a => `#${a.n + 1} ${a.source} ${a.outcome}${a.error ? " (" + a.error + ")" : ""}: ${a.sql || "(no SQL)"}`).join(" || ") : "",
       execution_outcome: r?.status || "not_run", execution_success: r ? (r.executed ? "yes" : "no") : "", empty_result: r ? (r.emptyResult ? "yes" : "no") : "",
       result_correct_auto: ac === null ? "" : ac ? "yes" : "no", result_correct_final: fc === null ? "" : fc ? "yes" : "no",
@@ -1403,9 +1497,9 @@ $("exportcsv").addEventListener("click", () => {
   download(`text-to-sql-evaluation-${schemaMode}.csv`, "﻿" + [cols.join(","), ...rows.map(r => cols.map(c => csvCell(r[c])).join(","))].join("\r\n"), "text/csv;charset=utf-8");
 });
 $("exportjson").addEventListener("click", () => {
-  const out = { project: "Self-Correcting Text-to-SQL over a Real-World Database Schema (Junior prototype)", build: "evaluation build 3.1 (optional schema linking; retries on Gemini overload), 23 Nov 2026",
+  const out = { project: "Self-Correcting Text-to-SQL over a Real-World Database Schema (Junior prototype)", build: "evaluation build 3.5 (empty-result retry; 5 s query time limit; vague-question rule; median time), 23 Nov 2026",
     database: "Harbor Goods synthetic store, SQLite (sql.js 1.10.3), fixed seed 20261030", models: MODELS, temperature: 0, maxRepairs: MAX_REPAIRS,
-    schemaMode, linker: "rule-based: table/column names, text values, business terms, shortest declared FK path; one-hop expansion on unknown table/column (Linked mode)",
+    promptVersion: PROMPT_VERSION, schemaMode, linker: "rule-based: table/column names, text values, business terms, shortest declared FK path; one-hop expansion on unknown table/column (Linked mode)",
     exportedAt: new Date().toISOString(), summary: $("evalsum").innerText, rows: evalRows(), records: cur().results };
   download(`text-to-sql-evaluation-${schemaMode}.json`, JSON.stringify(out, null, 2), "application/json");
 });
@@ -1501,6 +1595,7 @@ $("askbtn").disabled = true; $("q").disabled = true; $("runbtn").disabled = true
     db = new SQL.Database();
     const built = buildDatabaseSQL();
     db.exec(built.sql);
+    sandboxBytes = db.export();
     db.exec("PRAGMA query_only = ON;");
     DDL = built.ddl;
     built.ddl.split("\n\n").forEach(block => { const m = block.match(/CREATE TABLE (\w+)/); if (m) DDL_BY[m[1]] = block; });
@@ -1516,7 +1611,7 @@ $("askbtn").disabled = true; $("q").disabled = true; $("runbtn").disabled = true
       const missing = t.refTables.filter(x => !result.tables.includes(x));
       t.link = { result, missing, recall: t.refTables.length > 0 && missing.length === 0 };
     });
-    $("dbtag").innerHTML = "<b>harbor_goods.db</b> · SQLite · " + TABLES.length + " tables";
+    $("dbtag").innerHTML = "<b>harbor_goods.db</b>SQLite, " + TABLES.length + " tables";
     renderSchema();
     renderEval();
     setBusy(false);
@@ -1527,7 +1622,8 @@ $("askbtn").disabled = true; $("q").disabled = true; $("runbtn").disabled = true
     setStep("generate", "skip", "saved SQL used"); setStep("repair", "skip", "not needed");
     $("q").value = ""; $("explain").textContent = "Example: " + ex.q + " " + ex.explain;
     $("sql").value = ex.sql; $("sqlmeta").textContent = "saved example";
-    runSQL(ex.sql);
+    sandbox = await startSandbox();
+    await runSQL(ex.sql);
     $("log").innerHTML = ""; log("example", "Loaded a saved example. Ask your own question above.");
   } catch (e) {
     $("dbtag").textContent = "database failed to load";
