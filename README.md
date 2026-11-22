@@ -50,9 +50,11 @@ The **Evaluation run** panel at the bottom of the page runs a fixed test set thr
 - **15 test questions:** 4 simple, 4 joins, 4 aggregation and 3 unsupported or ambiguous requests.
 - **3 controlled repair tests:** a deliberately faulty query (wrong column, syntax error, unknown table) replaces the first LLM attempt, to test the repair loop. These are reported separately from the LLM test results.
 
-Reference SQL and expected results were fixed before any LLM run. For each question the page records the generated SQL of every attempt, the execution outcome, whether the result matches the expected result, the number of repairs and the total response time (time spent waiting on the Gemini free-tier rate limit is recorded separately and not counted). Execution success and result correctness are reported separately.
+Reference SQL and expected results were fixed before any LLM run. For each question the page records the generated SQL of every attempt, the execution outcome, whether the result matches the expected result, the number of repairs and the total response time (time lost to temporary Gemini problems is recorded separately and not counted). Execution success and result correctness are reported separately.
 
 A result is **correct** when it has the same rows as the expected result: row order is ignored, numbers are rounded to 2 decimals, and extra columns are allowed. For the unsupported or ambiguous requests, the correct behaviour is to decline (no SQL) or stop on the safety policy. Each automatic verdict can be overridden by hand, and both values are exported.
+
+If Gemini is temporarily unavailable (free-tier rate limit, "high demand" overload or a network error), the page waits 20 s and tries again, up to 3 times. If it still fails, the question is marked **Gemini error · not scored**: it is not counted as wrong, and **Re-run not scored** runs only those questions again.
 
 Results are kept **separately for each schema mode**. The main evaluation is the **Full** mode run; the Linked mode run is an additional comparison.
 
@@ -73,4 +75,4 @@ The exports include the schema mode, the tables in the reference SQL, the linked
 
 HTML, CSS, JavaScript · sql.js 1.10.3 (SQLite compiled to JavaScript) · Google Gemini API
 
-Build: evaluation build 3 (optional schema linking), 22 Nov 2026
+Build: evaluation build 3.1 (optional schema linking; retries on Gemini overload), 23 Nov 2026

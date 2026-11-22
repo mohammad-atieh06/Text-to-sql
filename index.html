@@ -318,6 +318,7 @@ details.tbl summary .c { color: var(--muted); font-weight: 400; font-variant-num
       <div class="evalsum" id="evalsum"></div>
       <div class="row-actions">
         <button type="button" class="primary" id="runall">Run all 18</button>
+        <button type="button" id="rerunfailed">Re-run not scored</button>
         <button type="button" id="stopall" hidden>Stop</button>
         <button type="button" id="exportcsv">Export CSV</button>
         <button type="button" id="exportjson">Export JSON</button>
@@ -335,7 +336,7 @@ details.tbl summary .c { color: var(--muted); font-weight: 400; font-variant-num
 
   <footer class="foot">
     <span>Text-to-SQL over a Real Database · Junior Project, University of Sharjah</span>
-    <span>Murtadha Hasan · Mohammad Ahmad · evaluation build 3 (optional schema linking), 22 Nov 2026</span>
+    <span>Murtadha Hasan · Mohammad Ahmad · evaluation build 3.1 (optional schema linking; retries on Gemini overload), 23 Nov 2026</span>
   </footer>
 </div>
 
@@ -811,6 +812,7 @@ async function llmJSON(prompt, tierName, signal, useCache) {
     if (res.status === 400 && /api key/i.test(detail)) throw llmError("bad_key", detail);
     if (res.status === 401 || res.status === 403) throw llmError("bad_key", detail);
     if (res.status === 429) throw llmError("rate_limited", detail);
+    if ([500, 502, 503, 504].includes(res.status) || /high demand|overloaded|unavailable/i.test(detail)) throw llmError("overloaded", detail || ("HTTP " + res.status));
     if (res.status === 404) throw llmError("model_missing", detail);
     throw llmError("upstream", detail || ("HTTP " + res.status));
   }
@@ -995,6 +997,7 @@ const ERR_COPY = {
   no_key: "Add a Gemini API key above to ask your own questions.",
   bad_key: "Gemini rejected the API key. Check it in the API key box above and save it again.",
   rate_limited: "The free Gemini quota is busy. Wait a minute, then ask again.",
+  overloaded: "Gemini is overloaded right now (high demand). Wait a minute, then ask again.",
   model_missing: "That Gemini model isn't available for this key. Switch between Fast and Accurate and try again.",
   network: "Couldn't reach Gemini. Check the internet connection and ask again.",
   refused: "The model declined this question. Rephrase it as a question about the store's data.",
@@ -1010,7 +1013,7 @@ function setBusy(b) {
   document.querySelectorAll(".chip").forEach(c => c.disabled = b || !db);
   document.querySelectorAll(".demochip").forEach(c => c.disabled = b || !db || !llmReady);
   $("stopbtn").hidden = !b || !llmReady || evalRunning;
-  $("runall").disabled = b || !llmReady || !db;
+  $("runall").disabled = b || !llmReady || !db; $("rerunfailed").disabled = b || !llmReady || !db;
   document.querySelectorAll(".runone").forEach(x => x.disabled = b || !llmReady || !db);
   $("stopall").hidden = !evalRunning;
   $("clearrun").disabled = b;
@@ -1023,17 +1026,20 @@ const sleep = (ms, signal) => new Promise((res, rej) => {
   signal?.addEventListener("abort", () => { clearTimeout(t); rej(llmError("cancelled", "Stopped")); }, { once: true });
 });
 
-// Calls the LLM; on a free-tier rate limit, waits 20 s and tries again (up to 2 times).
-// Waiting time is recorded separately and not counted as response time.
+// Calls the LLM. On a temporary provider problem (free-tier rate limit, "high demand"/overloaded server,
+// network failure) it waits 20 s and tries again, up to 3 times. The failed call and the waiting time are
+// recorded separately (waitMs, providerRetries) and are not counted as response time.
+const RETRYABLE = { rate_limited: "Gemini free-tier limit reached", overloaded: "Gemini is overloaded (high demand)", network: "Network error reaching Gemini" };
 async function callLLM(prompt, signal, useCache, rec) {
   for (let i = 0; ; i++) {
+    const c0 = performance.now();
     try { return await llmJSON(prompt, tier, signal, useCache); }
     catch (e) {
-      if (e?.code !== "rate_limited" || i >= 2) throw e;
-      const w0 = performance.now();
-      log("wait", "Gemini free-tier limit reached. Waiting 20 s, then trying again (not counted in response time).");
+      if (!RETRYABLE[e?.code] || i >= 3) throw e;
+      log("wait", `${RETRYABLE[e.code]}. Waiting 20 s, then trying again (${i + 1} of 3; not counted in response time).`, "warn");
+      rec.providerRetries = (rec.providerRetries || 0) + 1;
       await sleep(20000, signal);
-      rec.waitMs += performance.now() - w0;
+      rec.waitMs += performance.now() - c0;
     }
   }
 }
@@ -1266,7 +1272,7 @@ function finalCorrect(t) {
 
 const STATUS_LABEL = {
   executed: ["Executed", "ok"], abstained: ["Declined (no SQL)", "warn"], policy_stopped: ["Stopped: policy", "warn"],
-  failed_after_repairs: ["Failed after 2 repairs", "bad"], llm_error: ["LLM error", "bad"], stopped: ["Stopped", ""]
+  failed_after_repairs: ["Failed after 2 repairs", "bad"], llm_error: ["Gemini error · not scored", "warn"], stopped: ["Stopped", ""]
 };
 const pill = (text, cls) => { const s = document.createElement("span"); s.className = "pill" + (cls ? " " + cls : ""); s.textContent = text; return s; };
 
@@ -1278,6 +1284,7 @@ function renderEvalSummary() {
   const times = TESTS.map(t => E.results[t.id]).filter(r => r && r.status !== "stopped").map(r => r.totalMs);
   const repFixed = rep.filter(t => E.results[t.id]?.executed).length;
   const linkOk = answerable.filter(t => t.link?.recall).length;
+  const notScored = TESTS.filter(t => E.results[t.id]?.status === "llm_error").length;
   const stats = [
     [`${execOk} / ${answerable.length}`, "Execution success · 12 answerable questions"],
     [`${correct(answerable)} / ${answerable.length}`, "Result correct · 12 answerable questions"],
@@ -1286,6 +1293,7 @@ function renderEvalSummary() {
     [`${correct(rep)} / ${rep.length}`, "Controlled repair tests correct after repair"],
     [times.length ? (times.reduce((a, b) => a + b, 0) / times.length / 1000).toFixed(1) + " s" : "–", "Mean response time per question"],
     [`${linkOk} / ${answerable.length}`, "Schema-linking recall (rule-based, no LLM) · 12 answerable"],
+    [`${notScored}`, "Not scored: Gemini error (overload or network). Use “Re-run not scored”"],
   ];
   const box = $("evalsum"); box.innerHTML = "";
   stats.forEach(([v, k]) => { const d = document.createElement("div"); d.className = "stat"; const a = document.createElement("div"); a.className = "v"; a.textContent = v; const b = document.createElement("div"); b.className = "k"; b.textContent = k; d.append(a, b); box.append(d); });
@@ -1385,7 +1393,7 @@ function evalRows() {
       final_sql: last?.sql || "", attempts: r ? r.attempts.map(a => `#${a.n + 1} ${a.source} ${a.outcome}${a.error ? " (" + a.error + ")" : ""}: ${a.sql || "(no SQL)"}`).join(" || ") : "",
       execution_outcome: r?.status || "not_run", execution_success: r ? (r.executed ? "yes" : "no") : "", empty_result: r ? (r.emptyResult ? "yes" : "no") : "",
       result_correct_auto: ac === null ? "" : ac ? "yes" : "no", result_correct_final: fc === null ? "" : fc ? "yes" : "no",
-      repairs: r ? r.repairs : "", total_response_s: r ? (r.totalMs / 1000).toFixed(2) : "", rate_limit_wait_s: r ? (r.waitMs / 1000).toFixed(1) : "",
+      repairs: r ? r.repairs : "", total_response_s: r ? (r.totalMs / 1000).toFixed(2) : "", rate_limit_wait_s: r ? (r.waitMs / 1000).toFixed(1) : "", provider_retries: r ? (r.providerRetries || 0) : "",
       error: r?.error || "", model_explanation: r?.explanation || ""
     };
   });
@@ -1395,13 +1403,17 @@ $("exportcsv").addEventListener("click", () => {
   download(`text-to-sql-evaluation-${schemaMode}.csv`, "﻿" + [cols.join(","), ...rows.map(r => cols.map(c => csvCell(r[c])).join(","))].join("\r\n"), "text/csv;charset=utf-8");
 });
 $("exportjson").addEventListener("click", () => {
-  const out = { project: "Self-Correcting Text-to-SQL over a Real-World Database Schema (Junior prototype)", build: "evaluation build 3 (optional schema linking), 22 Nov 2026",
+  const out = { project: "Self-Correcting Text-to-SQL over a Real-World Database Schema (Junior prototype)", build: "evaluation build 3.1 (optional schema linking; retries on Gemini overload), 23 Nov 2026",
     database: "Harbor Goods synthetic store, SQLite (sql.js 1.10.3), fixed seed 20261030", models: MODELS, temperature: 0, maxRepairs: MAX_REPAIRS,
     schemaMode, linker: "rule-based: table/column names, text values, business terms, shortest declared FK path; one-hop expansion on unknown table/column (Linked mode)",
     exportedAt: new Date().toISOString(), summary: $("evalsum").innerText, rows: evalRows(), records: cur().results };
   download(`text-to-sql-evaluation-${schemaMode}.json`, JSON.stringify(out, null, 2), "application/json");
 });
 $("runall").addEventListener("click", () => runTests(TESTS));
+$("rerunfailed").addEventListener("click", () => {
+  const list = TESTS.filter(t => !cur().results[t.id] || cur().results[t.id].status === "llm_error");
+  if (list.length) runTests(list); else $("evalnote").textContent = "Nothing to re-run: every test has a scored result in this mode.";
+});
 $("stopall").addEventListener("click", () => { stopAll = true; ctl?.abort(); });
 $("clearrun").addEventListener("click", () => {
   if ($("clearrun").dataset.armed !== "1") { $("clearrun").dataset.armed = "1"; $("clearrun").textContent = "Click again to clear"; setTimeout(() => { $("clearrun").dataset.armed = ""; $("clearrun").textContent = "Clear results (this mode)"; }, 3000); return; }
