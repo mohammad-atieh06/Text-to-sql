@@ -118,6 +118,17 @@ textarea#sql { width: 100%; min-height: 150px; resize: vertical; font-family: va
 .log li .k { font-family: var(--f-mono); font-size: 0.72rem; padding: 1px 6px; border-radius: 4px; background: var(--bg); color: var(--muted); flex: none; }
 .log li.err .k { background: var(--err-soft); color: var(--err); }
 .log li.ok .k { background: var(--ok-soft); color: var(--ok); }
+.log li.warn .k { background: var(--warn-soft); color: var(--warn); }
+.attempts { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.attempt { border: 1px solid var(--line); border-radius: 8px; background: var(--bg); padding: 8px 10px; min-width: 0; }
+.attempt.bad { border-color: color-mix(in srgb, var(--err) 45%, var(--line)); }
+.attempt.good { border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); }
+.attempt .ah { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; font-size: 0.82rem; }
+.attempt .ah b { font-weight: 600; }
+.attempt .ae { color: var(--err); overflow-wrap: anywhere; }
+.attempt pre { font-family: var(--f-mono); font-size: 0.76rem; margin: 6px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--muted); }
+.democases { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip.demochip { border-color: var(--accent); background: var(--accent-soft); font-weight: 500; }
 .log li .m { min-width: 0; overflow-wrap: anywhere; }
 
 .tablewrap { overflow: auto; max-height: 460px; }
@@ -142,6 +153,8 @@ tbody tr:hover td { background: var(--bg); }
 aside { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 aside .panel .pbody { display: flex; flex-direction: column; gap: 10px; }
 details.tbl { border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+details.tbl.linked { border-color: var(--accent); background: var(--accent-soft); }
+details.tbl.linked summary > span:first-child { color: var(--accent); font-weight: 600; }
 details.tbl summary { cursor: pointer; padding: 7px 10px; font-family: var(--f-mono); font-size: 0.82rem; font-weight: 500; display: flex; justify-content: space-between; gap: 8px; list-style: none; }
 details.tbl summary::-webkit-details-marker { display: none; }
 details.tbl summary::before { content: "▸"; color: var(--muted); margin-right: 6px; transition: transform .15s; display: inline-block; }
@@ -154,6 +167,27 @@ details.tbl summary .c { color: var(--muted); font-weight: 400; font-variant-num
 .rules { margin: 0; padding-left: 18px; font-size: 0.82rem; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
 .rules b { color: var(--ink); font-weight: 600; }
 .small { font-size: 0.8rem; color: var(--muted); margin: 0; }
+
+/* Evaluation panel */
+.evalpanel { margin-top: 20px; }
+.evalbody { display: flex; flex-direction: column; gap: 12px; }
+.evalsum { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+.stat { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--bg); min-width: 0; }
+.stat .v { font-size: 1.25rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stat .k { font-size: 0.75rem; color: var(--muted); }
+.evaltable { max-height: none; border: 1px solid var(--line); border-radius: 8px; }
+.evaltable td { white-space: normal; vertical-align: top; }
+.evaltable td.q { min-width: 240px; }
+.evaltable details summary { cursor: pointer; }
+.evaltable details pre { font-family: var(--f-mono); font-size: 0.74rem; background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px; margin: 6px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.evaltable details .lbl { display: block; margin-top: 8px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.evaltable tr.group td { background: var(--bg); font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.pill { display: inline-block; font-size: 0.74rem; padding: 1px 8px; border-radius: 999px; background: var(--bg); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+.pill.bad { background: var(--err-soft); color: var(--err); border-color: transparent; }
+.pill.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.evaltable select { font: inherit; font-size: 0.78rem; margin-top: 4px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); padding: 2px 4px; }
+.evaltable button { padding: 4px 10px; font-size: 0.8rem; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -165,7 +199,7 @@ details.tbl summary .c { color: var(--muted); font-weight: 400; font-variant-num
       <p class="sub">Ask a question in plain English. A language model turns it into SQL, then the system checks the query and runs it on a real SQLite database.</p>
       <ul class="team" aria-label="Team">
         <li><b>Murtadha Hasan</b> <span>U23106466</span></li>
-        <li><b>Mohammed Ahmad</b> <span>U23106325</span></li>
+        <li><b>Mohammad Ahmad</b> <span>U23106325</span></li>
       </ul>
     </div>
     <div class="dbtag" id="dbtag">loading database…</div>
@@ -188,6 +222,14 @@ details.tbl summary .c { color: var(--muted); font-weight: 400; font-variant-num
           </div>
           <span id="modelnote">Fast: Gemini Flash-Lite. Accurate: Gemini Flash.</span>
         </div>
+        <div class="controls">
+          <span>Schema</span>
+          <div class="seg" role="group" aria-label="Schema sent to the model">
+            <button type="button" id="s-full" aria-pressed="true">Full</button>
+            <button type="button" id="s-linked" aria-pressed="false">Linked</button>
+          </div>
+          <span id="schemanote">Full: the whole schema goes into the prompt (evaluation default). Linked: only the tables chosen by the schema linker (experimental).</span>
+        </div>
         <details class="settings" id="settings">
           <summary>Gemini API key <span class="keystatus" id="keystatus">not set</span></summary>
           <div class="setbody">
@@ -201,7 +243,11 @@ details.tbl summary .c { color: var(--muted); font-weight: 400; font-variant-num
         </details>
         <div class="notice" id="nosample" hidden>Add a Gemini API key above to ask your own questions. The example questions below still run, using SQL saved with each example, and you can edit SQL by hand.</div>
         <div>
-          <div class="label" style="margin-bottom:6px">Try an example</div>
+          <div class="label" style="margin-bottom:6px">Presentation demo · three live cases (LLM)</div>
+          <div class="democases" id="democases"></div>
+        </div>
+        <div>
+          <div class="label" style="margin-bottom:6px">Built-in examples (hand-written SQL, not LLM; demo only)</div>
           <div class="examples" id="examples"></div>
         </div>
       </section>
@@ -227,6 +273,7 @@ details.tbl summary .c { color: var(--muted); font-weight: 400; font-variant-num
             <span class="small" id="editnote">Edit the query and run it yourself to compare.</span>
           </div>
           <ul class="log" id="log"></ul>
+          <div class="attempts" id="attempts" hidden></div>
         </div>
       </section>
 
@@ -253,12 +300,42 @@ details.tbl summary .c { color: var(--muted); font-weight: 400; font-variant-num
           <p class="small">Each viewer gets a fresh in-memory copy of the database, locked with <code>PRAGMA query_only</code>.</p>
         </div>
       </section>
+      <section class="panel" aria-label="Schema linker">
+        <div class="phead"><span class="label">Schema linker (rule-based)</span></div>
+        <div class="pbody">
+          <p class="small">Matches the question against table names, column names, exact values in text columns and a short list of business terms, then adds the tables on the shortest declared foreign-key path between them. Undeclared joins are never invented. Highlighted tables are the ones linked for the last question.</p>
+          <p class="small">If a query fails with "no such table" or "no such column", the linked set is expanded by one foreign-key hop before the repair (Linked mode only).</p>
+        </div>
+      </section>
     </aside>
   </div>
 
+  <section class="panel evalpanel" aria-label="Evaluation run">
+    <div class="phead"><span class="label">Evaluation run · 15 test questions + 3 controlled repair tests</span><span class="meta" id="evalmeta"></span></div>
+    <div class="pbody evalbody">
+      <p class="small">Reference SQL and expected results were fixed on 22 Nov 2026, before any LLM run. Expected results are computed live from the reference SQL. A result counts as correct when it has the same rows as the expected result (row order ignored, numbers rounded to 2 decimals, extra columns allowed). The built-in examples above are hand-written and are not part of this evaluation.</p>
+      <p class="small">Results are kept separately for each schema mode. <b id="evalmode">Full schema</b> is selected; switch the Schema control above to see or run the other mode. The Linking column is computed without the LLM: it checks whether the linker picked every table used by the reference SQL (strict recall).</p>
+      <div class="evalsum" id="evalsum"></div>
+      <div class="row-actions">
+        <button type="button" class="primary" id="runall">Run all 18</button>
+        <button type="button" id="stopall" hidden>Stop</button>
+        <button type="button" id="exportcsv">Export CSV</button>
+        <button type="button" id="exportjson">Export JSON</button>
+        <button type="button" id="clearrun">Clear results (this mode)</button>
+        <span class="small" id="evalnote"></span>
+      </div>
+      <div class="tablewrap evaltable">
+        <table id="evaltbl">
+          <thead><tr><th>ID</th><th>Question</th><th>Linking</th><th>Execution</th><th>Result</th><th class="num">Repairs</th><th class="num">Time (s)</th><th></th></tr></thead>
+          <tbody id="evalbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
   <footer class="foot">
     <span>Text-to-SQL over a Real Database · Junior Project, University of Sharjah</span>
-    <span>Murtadha Hasan · Mohammed Ahmad</span>
+    <span>Murtadha Hasan · Mohammad Ahmad · evaluation build 3 (optional schema linking), 22 Nov 2026</span>
   </footer>
 </div>
 
@@ -390,6 +467,120 @@ function buildDatabaseSQL() {
 }
 </script>
 
+<script id="linker">
+// ---------- Schema-Linking Agent (rule-based keyword baseline, UC-02) ----------
+// Evidence used, in order: table names, column names, exact values in low-cardinality text columns,
+// a short list of business terms for this schema, then the shortest declared FK path between linked tables.
+// Undeclared relationships are never invented; problems are reported as gaps.
+const LINK_TERMS = [
+  [["revenue", "sales", "sold", "spent", "spend", "bought", "buy", "purchase", "purchased", "ordered", "units"], ["orders", "order_items"]],
+  [["placed"], ["orders"]],
+  [["reviewer", "rated"], ["customers", "reviews"]],
+  [["expensive", "cheap", "cheapest"], ["products"]],
+  [["live", "lives"], ["customers"]],
+];
+const DATE_WORDS = /\b(january|february|march|april|june|july|august|september|october|november|december|20\d\d)\b/i;
+
+function stemWord(w) {
+  w = w.toLowerCase().replace(/'s$/, "").replace(/[^a-z0-9]/g, "");
+  if (w.length > 4 && w.endsWith("ies")) return w.slice(0, -3) + "y";
+  if (w.length > 3 && w.endsWith("s") && !/(ss|us|is)$/.test(w)) return w.slice(0, -1);
+  return w;
+}
+const linkTokens = s => s.split(/[^A-Za-z0-9']+/).map(stemWord).filter(Boolean);
+function hasPhrase(qt, pt) {
+  if (!pt.length) return false;
+  outer: for (let i = 0; i + pt.length <= qt.length; i++) {
+    for (let j = 0; j < pt.length; j++) if (qt[i + j] !== pt[j]) continue outer;
+    return true;
+  }
+  return false;
+}
+const reEscape = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+// Reads catalog metadata once: columns, declared FKs (as an undirected join graph) and text values.
+function buildLinkMeta(db, tables) {
+  const meta = { order: tables.slice(), tables: {}, adj: {} };
+  tables.forEach(t => { meta.adj[t] = meta.adj[t] || new Set(); });
+  for (const t of tables) {
+    const cols = db.exec(`SELECT name, type FROM pragma_table_info('${t}')`)[0].values.map(r => ({ name: r[0], type: String(r[1]).toUpperCase() }));
+    const fk = db.exec(`SELECT "table" FROM pragma_foreign_key_list('${t}')`);
+    (fk[0]?.values || []).forEach(([o]) => { meta.adj[t].add(o); (meta.adj[o] = meta.adj[o] || new Set()).add(t); });
+    const values = [];
+    for (const c of cols) {
+      if (c.type !== "TEXT" || /email|date|_at$/.test(c.name)) continue;
+      const n = db.exec(`SELECT COUNT(DISTINCT "${c.name}") FROM ${t}`)[0].values[0][0];
+      if (n > 300) continue;
+      db.exec(`SELECT DISTINCT "${c.name}" FROM ${t}`)[0].values.forEach(([v]) => {
+        v = String(v);
+        if (v.length >= 2) values.push({ col: c.name, v, re: new RegExp("(^|[^a-z0-9])" + reEscape(v.toLowerCase()) + "($|[^a-z0-9])") });
+      });
+    }
+    meta.tables[t] = { cols, values, phrase: linkTokens(t.replace(/_/g, " ")) };
+  }
+  return meta;
+}
+
+// Breadth-first search from any table already linked to the target table over declared FKs.
+function shortestPath(from, to, adj) {
+  const prev = new Map(), queue = [...from];
+  from.forEach(t => prev.set(t, null));
+  while (queue.length) {
+    const t = queue.shift();
+    if (t === to) { const path = []; for (let x = to; x !== null; x = prev.get(x)) path.unshift(x); return path; }
+    for (const n of adj[t] || []) if (!prev.has(n)) { prev.set(n, t); queue.push(n); }
+  }
+  return null;
+}
+
+function linkSchema(question, meta) {
+  const qt = linkTokens(question), ql = question.toLowerCase();
+  const reasons = {};
+  const add = (t, why) => { if (!meta.tables[t]) return; (reasons[t] = reasons[t] || []); if (!reasons[t].includes(why)) reasons[t].push(why); };
+  for (const t of meta.order) {
+    const m = meta.tables[t];
+    if (hasPhrase(qt, m.phrase)) add(t, "table name");
+    for (const c of m.cols) {
+      if (c.name === "name" || /_id$/.test(c.name)) continue;
+      if (hasPhrase(qt, linkTokens(c.name.replace(/_/g, " ")))) add(t, "column " + c.name);
+    }
+    for (const v of m.values) if (v.re.test(ql)) add(t, `value '${v.v}' in ${v.col}`);
+  }
+  for (const [words, ts] of LINK_TERMS) for (const w of words) if (qt.includes(stemWord(w))) ts.forEach(t => add(t, `term '${w}'`));
+  if (DATE_WORDS.test(question)) add("orders", "date in question");
+
+  const direct = meta.order.filter(t => reasons[t]);
+  if (!direct.length) return { tables: meta.order.slice(), direct: [], via: [], reasons, gaps: ["No table matched the question, so the full schema is used."], fallback: true };
+  // Connect the linked tables greedily: always join the nearest remaining one first (approximate Steiner tree),
+  // so a short path through an unrelated table is not taken before the direct evidence is used.
+  const tree = new Set([direct[0]]), via = [], gaps = [];
+  let left = direct.slice(1);
+  while (left.length) {
+    let best = null;
+    for (const t of left) { if (tree.has(t)) { best = { t, path: [t] }; break; } const p = shortestPath(tree, t, meta.adj); if (p && (!best || p.length < best.path.length)) best = { t, path: p }; }
+    if (!best) { left.forEach(t => { gaps.push(`No declared join path to ${t}.`); tree.add(t); }); break; }
+    best.path.forEach(p => { if (!tree.has(p)) { tree.add(p); if (!reasons[p]) via.push(p); } });
+    left = left.filter(t => !tree.has(t));
+  }
+  return { tables: meta.order.filter(t => tree.has(t)), direct, via, reasons, gaps, fallback: false };
+}
+
+// One-hop expansion over declared FKs, used after an unknown-table or unknown-column error.
+function expandLink(tables, meta) {
+  const s = new Set(tables);
+  tables.forEach(t => (meta.adj[t] || []).forEach(n => s.add(n)));
+  const out = meta.order.filter(t => s.has(t));
+  return { tables: out, added: out.filter(t => !tables.includes(t)) };
+}
+
+// Tables used by a reference query (FROM and JOIN targets that exist in the schema).
+function refTables(sql, meta) {
+  const s = new Set();
+  for (const m of sql.matchAll(/\b(?:from|join)\s+([A-Za-z_][A-Za-z0-9_]*)/gi)) if (meta.tables[m[1].toLowerCase()]) s.add(m[1].toLowerCase());
+  return meta.order.filter(t => s.has(t));
+}
+</script>
+
 <script>
 // ---------- Example questions (saved SQL lets them run even without an API key) ----------
 const EXAMPLES = [
@@ -453,6 +644,126 @@ GROUP BY p.product_id
 ORDER BY units_sold_90d DESC;`, explain: "Finds products with fewer than 15 in stock and ranks them by units sold in the last 90 days." },
 ];
 
+const TESTS = [
+ {
+  "id": "S1",
+  "cat": "Simple",
+  "q": "List the products in the Kitchen category with their prices.",
+  "ref": "SELECT name, price\nFROM products\nWHERE category = 'Kitchen';"
+ },
+ {
+  "id": "S2",
+  "cat": "Simple",
+  "q": "Which customers live in Berlin?",
+  "ref": "SELECT full_name\nFROM customers\nWHERE city = 'Berlin';"
+ },
+ {
+  "id": "S3",
+  "cat": "Simple",
+  "q": "Which products have fewer than 10 items in stock?",
+  "ref": "SELECT name\nFROM products\nWHERE stock < 10;"
+ },
+ {
+  "id": "S4",
+  "cat": "Simple",
+  "q": "What are the 5 most expensive products?",
+  "ref": "SELECT name\nFROM products\nORDER BY price DESC\nLIMIT 5;"
+ },
+ {
+  "id": "J1",
+  "cat": "Join",
+  "q": "Which products has Julia Nair ordered?",
+  "ref": "SELECT DISTINCT p.name\nFROM customers c\nJOIN orders o       ON o.customer_id = c.customer_id\nJOIN order_items oi ON oi.order_id = o.order_id\nJOIN products p     ON p.product_id = oi.product_id\nWHERE c.full_name = 'Julia Nair';"
+ },
+ {
+  "id": "J2",
+  "cat": "Join",
+  "q": "Show the reviews of the Wall Clock with the reviewer's name and rating.",
+  "ref": "SELECT c.full_name, r.rating\nFROM reviews r\nJOIN products p  ON p.product_id = r.product_id\nJOIN customers c ON c.customer_id = r.customer_id\nWHERE p.name = 'Wall Clock';"
+ },
+ {
+  "id": "J3",
+  "cat": "Join",
+  "q": "Which customers from Dubai placed an order in October 2026?",
+  "ref": "SELECT DISTINCT c.full_name\nFROM customers c\nJOIN orders o ON o.customer_id = c.customer_id\nWHERE c.city = 'Dubai'\n  AND o.order_date BETWEEN '2026-10-01' AND '2026-10-31';"
+ },
+ {
+  "id": "J4",
+  "cat": "Join",
+  "q": "Show the orders placed on 14 September 2026 with the customer's name and the order status.",
+  "ref": "SELECT c.full_name, o.status\nFROM orders o\nJOIN customers c ON c.customer_id = o.customer_id\nWHERE o.order_date = '2026-09-14';"
+ },
+ {
+  "id": "A1",
+  "cat": "Aggregation",
+  "q": "How many orders are there in each status?",
+  "ref": "SELECT status, COUNT(*) AS orders\nFROM orders\nGROUP BY status;"
+ },
+ {
+  "id": "A2",
+  "cat": "Aggregation",
+  "q": "What is the average product price in each category?",
+  "ref": "SELECT category, ROUND(AVG(price), 2) AS avg_price\nFROM products\nGROUP BY category;"
+ },
+ {
+  "id": "A3",
+  "cat": "Aggregation",
+  "q": "Which country has the most customers?",
+  "ref": "SELECT country\nFROM customers\nGROUP BY country\nORDER BY COUNT(*) DESC\nLIMIT 1;"
+ },
+ {
+  "id": "A4",
+  "cat": "Aggregation",
+  "q": "What was the total revenue in 2025?",
+  "ref": "SELECT ROUND(SUM(oi.quantity * oi.unit_price), 2) AS revenue\nFROM orders o\nJOIN order_items oi ON oi.order_id = o.order_id\nWHERE o.status NOT IN ('cancelled', 'returned')\n  AND o.order_date BETWEEN '2025-01-01' AND '2025-12-31';"
+ },
+ {
+  "id": "U1",
+  "cat": "Unsupported",
+  "q": "What is each customer's phone number?",
+  "expect": "refuse",
+  "why": "The schema has no phone number column."
+ },
+ {
+  "id": "U2",
+  "cat": "Unsupported",
+  "q": "Delete all cancelled orders.",
+  "expect": "refuse",
+  "why": "A write request; the system is read-only."
+ },
+ {
+  "id": "U3",
+  "cat": "Ambiguous",
+  "q": "Who are our best customers?",
+  "expect": "refuse",
+  "why": "\"Best\" is undefined (by spend, by number of orders, by reviews?)."
+ },
+ {
+  "id": "R1",
+  "cat": "Controlled repair",
+  "q": "Which customer placed the most orders?",
+  "inject": "SELECT c.name, COUNT(o.order_id) AS orders\nFROM customers c\nJOIN orders o ON o.customer_id = c.customer_id\nGROUP BY c.customer_id\nORDER BY orders DESC\nLIMIT 1;",
+  "fault": "Wrong column name (customers has full_name, not name)",
+  "ref": "SELECT c.full_name\nFROM customers c\nJOIN orders o ON o.customer_id = c.customer_id\nGROUP BY c.customer_id\nORDER BY COUNT(o.order_id) DESC\nLIMIT 1;"
+ },
+ {
+  "id": "R2",
+  "cat": "Controlled repair",
+  "q": "What is the total stock in each product category?",
+  "inject": "SELECT category, SUM(stock) AS total_stock\nFROM products\nGROUP category;",
+  "fault": "Syntax error (GROUP without BY)",
+  "ref": "SELECT category, SUM(stock) AS total_stock\nFROM products\nGROUP BY category;"
+ },
+ {
+  "id": "R3",
+  "cat": "Controlled repair",
+  "q": "List the orders placed on 29 October 2026 with their status.",
+  "inject": "SELECT order_id, status\nFROM purchases\nWHERE order_date = '2026-10-29';",
+  "fault": "Unknown table (purchases does not exist)",
+  "ref": "SELECT order_id, status\nFROM orders\nWHERE order_date = '2026-10-29';"
+ }
+];
+
 const RULES_TEXT = `- Revenue = SUM(order_items.quantity * order_items.unit_price) for orders whose status is NOT 'cancelled' or 'returned'.
 - Today's date is 2026-10-30. "Last quarter" = 2026-07-01 to 2026-09-30. "Last N days" is relative to 2026-10-30.
 - Dates are ISO text 'YYYY-MM-DD'; use strftime() or date() to group or compare.`;
@@ -460,6 +771,10 @@ const RULES_TEXT = `- Revenue = SUM(order_items.quantity * order_items.unit_pric
 // ---------- State ----------
 const $ = id => document.getElementById(id);
 let db = null, DDL = "", SAMPLE_ROWS = "", llmReady = false, tier = "quick", ctl = null, busy = false;
+let evalRunning = false, stopAll = false;
+let schemaMode = "full", LINKMETA = null;
+const DDL_BY = {}, SAMPLE_BY = {};
+const MODE_NAME = { full: "Full schema", linked: "Linked schema" };
 
 // ---------- Language model (Google Gemini, called from the browser) ----------
 const MODELS = { quick: "gemini-3.5-flash-lite", default: "gemini-3.8-flash" };
@@ -536,8 +851,10 @@ function validate(sql) {
   const stripped = s.replace(/--[^\n]*/g, " ").replace(/\/\*[\s\S]*?\*\//g, " ").replace(/'(?:[^']|'')*'/g, "''").replace(/"(?:[^"]|"")*"/g, '""');
   if (stripped.includes(";")) return { ok: false, reason: "Only one statement is allowed." };
   if (!/^\s*(select|with)\b/i.test(stripped)) return { ok: false, reason: "Only SELECT queries are allowed." };
-  const bad = stripped.match(/\b(insert|update|delete|drop|alter|create|attach|detach|pragma|replace|vacuum|reindex|analyze)\b/i);
+  const bad = stripped.match(/\b(insert|update|delete|drop|alter|create|attach|detach|pragma|vacuum|reindex|analyze)\b/i);
   if (bad) return { ok: false, reason: `Blocked keyword: ${bad[1].toUpperCase()}.` };
+  // REPLACE(text, a, b) is a harmless string function; REPLACE INTO is a write.
+  if (/\breplace\b(?!\s*\()/i.test(stripped)) return { ok: false, reason: "Blocked keyword: REPLACE." };
   return { ok: true, sql: s };
 }
 
@@ -612,8 +929,10 @@ function runSQL(sql) {
   setStep("execute", "active");
   try {
     const res = execute(v.sql);
-    setStep("execute", "done", `${res.rows.length}${res.capped ? "+" : ""} rows · ${res.ms.toFixed(0)} ms`);
+    const empty = res.rows.length === 0;
+    setStep("execute", "done", empty ? "0 rows · flagged" : `${res.rows.length}${res.capped ? "+" : ""} rows · ${res.ms.toFixed(0)} ms`);
     log("run", `Returned ${res.rows.length}${res.capped ? "+" : ""} rows in ${res.ms.toFixed(1)} ms.`, "ok");
+    if (empty) log("flag", "Empty result: the query ran but returned no rows. Execution success is not a correct answer, so check the SQL. (Flagged only; not repaired.)", "warn");
     renderResults(res);
     return { ok: true, res };
   } catch (e) {
@@ -624,15 +943,36 @@ function runSQL(sql) {
   }
 }
 
+// ---------- Schema context (full or linked) ----------
+function contextFor(tables) {
+  return {
+    linked: tables.length < TABLES.length,
+    ddl: tables.map(t => DDL_BY[t]).join("\n\n"),
+    samples: tables.map(t => SAMPLE_BY[t]).join("\n"),
+  };
+}
+function describeLink(link) {
+  if (link.fallback) return link.gaps[0];
+  let s = `Linked ${link.tables.length} of ${TABLES.length} tables: ${link.tables.join(", ")}.`;
+  s += " Evidence: " + link.direct.map(t => `${t} (${link.reasons[t].join("; ")})`).join(", ") + ".";
+  if (link.via.length) s += ` Added on the declared join path: ${link.via.join(", ")}.`;
+  if (link.gaps.length) s += " Gaps: " + link.gaps.join(" ");
+  return s;
+}
+function markLinked(tables) {
+  document.querySelectorAll("details.tbl").forEach(d => d.classList.toggle("linked", tables.includes(d.dataset.t)));
+  $("schemameta").textContent = tables.length ? `${TABLES.length} tables · ${tables.length} linked` : `${TABLES.length} tables`;
+}
+
 // ---------- Prompt ----------
-function buildPrompt(question, prev) {
+function buildPrompt(question, prev, ctx) {
   let p = `You translate a user's question into one SQLite query for the database below.
 
-SCHEMA:
-${DDL}
+SCHEMA${ctx.linked ? " (only the tables a schema linker selected as relevant to this question)" : ""}:
+${ctx.ddl}
 
 SAMPLE ROWS (3 per table):
-${SAMPLE_ROWS}
+${ctx.samples}
 
 BUSINESS RULES:
 ${RULES_TEXT}
@@ -668,70 +1008,196 @@ function setBusy(b) {
   busy = b;
   $("askbtn").disabled = b || !llmReady || !db; $("q").disabled = b || !llmReady; $("runbtn").disabled = b || !db;
   document.querySelectorAll(".chip").forEach(c => c.disabled = b || !db);
-  $("stopbtn").hidden = !b || !llmReady;
+  document.querySelectorAll(".demochip").forEach(c => c.disabled = b || !db || !llmReady);
+  $("stopbtn").hidden = !b || !llmReady || evalRunning;
+  $("runall").disabled = b || !llmReady || !db;
+  document.querySelectorAll(".runone").forEach(x => x.disabled = b || !llmReady || !db);
+  $("stopall").hidden = !evalRunning;
+  $("clearrun").disabled = b;
+  $("s-full").disabled = b; $("s-linked").disabled = b;
 }
 
-async function ask(question) {
-  if (!question.trim() || !db || busy) return;
+const MAX_REPAIRS = 2;
+const sleep = (ms, signal) => new Promise((res, rej) => {
+  const t = setTimeout(res, ms);
+  signal?.addEventListener("abort", () => { clearTimeout(t); rej(llmError("cancelled", "Stopped")); }, { once: true });
+});
+
+// Calls the LLM; on a free-tier rate limit, waits 20 s and tries again (up to 2 times).
+// Waiting time is recorded separately and not counted as response time.
+async function callLLM(prompt, signal, useCache, rec) {
+  for (let i = 0; ; i++) {
+    try { return await llmJSON(prompt, tier, signal, useCache); }
+    catch (e) {
+      if (e?.code !== "rate_limited" || i >= 2) throw e;
+      const w0 = performance.now();
+      log("wait", "Gemini free-tier limit reached. Waiting 20 s, then trying again (not counted in response time).");
+      await sleep(20000, signal);
+      rec.waitMs += performance.now() - w0;
+    }
+  }
+}
+
+// One request through the pipeline. Returns a record of every attempt.
+// opts.inject: a faulty query that replaces the first LLM attempt (controlled repair test).
+async function runPipeline(question, opts = {}) {
+  const rec = { question, model: MODELS[tier], schemaMode, startedAt: new Date().toISOString(), attempts: [], status: "", executed: false, repairs: 0, totalMs: 0, waitMs: 0, error: "", explanation: "", result: null, linkedTables: [], promptTables: [], expanded: false };
   resetSteps(); $("log").innerHTML = ""; $("explain").textContent = ""; $("sqlmeta").textContent = "";
   $("results").innerHTML = '<div class="empty">Waiting for a query…</div>'; $("bars").hidden = true; $("resmeta").textContent = "";
-  $("sql").value = "";
-  setBusy(true);
+  $("sql").value = ""; renderAttempts(null);
   ctl = new AbortController();
   const signal = ctl.signal;
-  setStep("context", "done", `${TABLES.length} tables · ${COLCOUNT} columns`);
-  const prev = [];
   const t0 = performance.now();
+  // Schema linking runs in both modes so it can be inspected; only Linked mode narrows the prompt.
+  const link = linkSchema(question, LINKMETA);
+  rec.linkedTables = link.tables.slice();
+  let ctxTables = schemaMode === "linked" ? link.tables.slice() : TABLES.slice();
+  markLinked(link.tables);
+  setStep("context", "done", schemaMode === "linked" ? `linked ${ctxTables.length} of ${TABLES.length} tables` : `${TABLES.length} tables · ${COLCOUNT} columns`);
+  log("link", describeLink(link) + (schemaMode === "full" ? " (Full mode: shown only; the whole schema is sent.)" : ""));
+  const prev = [];
+  const finish = (status, error) => { rec.status = status; rec.error = error || ""; rec.promptTables = ctxTables.slice(); rec.totalMs = performance.now() - t0 - rec.waitMs; renderAttempts(rec); return rec; };
   try {
-    for (let attempt = 0; attempt <= 2; attempt++) {
+    for (let attempt = 0; attempt <= MAX_REPAIRS; attempt++) {
       const stepKey = attempt === 0 ? "generate" : "repair";
-      setStep(stepKey, "active", attempt === 0 ? MODELS[tier] : `attempt ${attempt} of 2`);
-      if (attempt === 0) setStep("repair", "");
-      const out = await llmJSON(buildPrompt(question, prev), tier, signal, !prev.length);
-      if (signal.aborted) return;
-      const sql = typeof out?.sql === "string" ? out.sql.trim() : "";
-      const explanation = typeof out?.explanation === "string" ? out.explanation : "";
+      let sql, explanation = "", source = "llm";
+      if (attempt === 0 && opts.inject) {
+        source = "injected";
+        sql = opts.inject.trim();
+        setStep("generate", "skip", "faulty SQL injected");
+        setStep("repair", "");
+        log("inject", "Controlled repair test: a deliberately faulty query replaces the first LLM attempt.");
+      } else {
+        setStep(stepKey, "active", attempt === 0 ? MODELS[tier] : `attempt ${attempt} of ${MAX_REPAIRS}`);
+        if (attempt === 0) setStep("repair", "");
+        const out = await callLLM(buildPrompt(question, prev, contextFor(ctxTables)), signal, !!opts.useCache && !prev.length, rec);
+        if (signal.aborted) return finish("stopped", "Stopped by user");
+        sql = typeof out?.sql === "string" ? out.sql.trim() : "";
+        explanation = typeof out?.explanation === "string" ? out.explanation : "";
+        setStep(stepKey, "done", attempt === 0 ? "SQL written" : `fixed on try ${attempt}`);
+        log(attempt === 0 ? "llm" : "repair", attempt === 0 ? "Generated a query." : "Sent the error back; the model rewrote the query.");
+      }
+      if (attempt > 0) rec.repairs = attempt;
+      if (explanation) rec.explanation = explanation;
       $("explain").textContent = explanation;
       $("sql").value = sql;
-      $("sqlmeta").textContent = `${((performance.now() - t0) / 1000).toFixed(1)} s · ${tier === "quick" ? "Fast" : "Accurate"}${attempt ? ` · fixed after ${attempt} ${attempt === 1 ? "retry" : "retries"}` : ""}`;
-      setStep(stepKey, "done", attempt === 0 ? "SQL written" : `fixed on try ${attempt}`);
-      log(attempt === 0 ? "llm" : "repair", attempt === 0 ? "Generated a query." : "Sent the error back; the model rewrote the query.");
+      $("sqlmeta").textContent = `${((performance.now() - t0 - rec.waitMs) / 1000).toFixed(1)} s · ${MODELS[tier]}${rec.repairs ? ` · ${rec.repairs} ${rec.repairs === 1 ? "repair" : "repairs"}` : ""}`;
+      const att = { n: attempt, source, sql, outcome: "", error: "", promptTables: ctxTables.slice() };
+      rec.attempts.push(att);
+
       if (!sql) {
-        setStep("validate", "skip"); setStep("execute", "skip"); setStep("repair", "skip");
+        att.outcome = "abstained";
+        setStep("validate", "skip"); setStep("execute", "skip"); setStep("repair", "skip", "not needed");
+        log("abstain", "No SQL returned: the model declined the request.");
         showError(explanation || "The model couldn't map this question to the schema.");
-        return;
+        return finish("abstained", explanation);
       }
       const r = runSQL(sql);
-      if (r.ok) { if (attempt === 0) setStep("repair", "skip", "not needed"); return; }
+      if (r.ok) {
+        att.outcome = "success";
+        rec.executed = true;
+        rec.result = { cols: r.res.cols, rows: r.res.rows };
+        rec.emptyResult = r.res.rows.length === 0;
+        if (attempt === 0) setStep("repair", "skip", "not needed");
+        return finish("executed");
+      }
+      att.error = r.error;
+      if (r.stage === "validate") {
+        // Policy violations end the request. They are never sent back for repair.
+        att.outcome = "policy_rejected";
+        setStep("repair", "skip", "stopped: policy");
+        log("stop", "Policy violation: request stopped, no retry.", "err");
+        showError(`Stopped: the query broke the safety policy (${r.error}) Policy violations end the request and are never retried.`);
+        return finish("policy_stopped", r.error);
+      }
+      att.outcome = "sql_error";
+      renderAttempts(rec);
       prev.push({ sql, error: r.error });
-      if (attempt === 2) { setStep("repair", "error", "gave up after 2 tries"); showError(`The query still fails after 2 fixes: ${r.error}`); return; }
-      // reset downstream steps for the retry
+      if (attempt === MAX_REPAIRS) {
+        setStep("repair", "error", `gave up after ${MAX_REPAIRS} tries`);
+        showError(`The query still fails after ${MAX_REPAIRS} repairs: ${r.error}`);
+        return finish("failed_after_repairs", r.error);
+      }
+      // AutoLink-style expansion: an unknown table or column may mean the linker left something out.
+      if (schemaMode === "linked" && !rec.expanded && /no such (table|column)/i.test(r.error)) {
+        const exp = expandLink(ctxTables, LINKMETA);
+        rec.expanded = true;
+        if (exp.added.length) {
+          ctxTables = exp.tables;
+          markLinked(ctxTables);
+          setStep("context", "done", `expanded to ${ctxTables.length} of ${TABLES.length} tables`);
+          log("expand", `Unknown table or column: added ${exp.added.join(", ")} (one foreign-key hop) to the schema before the repair.`, "warn");
+        } else log("expand", "Unknown table or column, but no neighbouring tables were left to add.");
+      }
       setStep("validate", ""); setStep("execute", "");
     }
   } catch (e) {
     const code = e && e.code;
-    if (code === "cancelled") { log("stop", "Stopped."); resetSteps(); $("results").innerHTML = '<div class="empty">Stopped.</div>'; return; }
-    setStep("generate", "error", code || "error");
+    if (code === "cancelled") { log("stop", "Stopped."); $("results").innerHTML = '<div class="empty">Stopped.</div>'; return finish("stopped", "Stopped by user"); }
+    setStep(rec.attempts.length ? "repair" : "generate", "error", code || "error");
     showError(ERR_COPY[code] || ("Gemini returned an error: " + (e && e.message || "unknown") + ". Ask again."));
     if (code === "bad_key" || code === "no_key") $("settings").open = true;
-  } finally { setBusy(false); ctl = null; }
+    return finish("llm_error", `${code || "error"}: ${e && e.message || ""}`);
+  } finally { ctl = null; }
+}
+
+const OUTCOME_TEXT = { success: "ran successfully", sql_error: "SQL error", policy_rejected: "stopped by the safety policy", abstained: "declined (no SQL)" };
+// Shows every attempt of a request when there was more than one, or when the first one failed.
+function renderAttempts(rec) {
+  const box = $("attempts"); box.innerHTML = "";
+  const list = rec ? rec.attempts.filter(a => a.outcome) : [];
+  if (list.length < 2 && !(list.length === 1 && list[0].outcome !== "success" && list[0].outcome !== "abstained")) { box.hidden = true; return; }
+  list.forEach(a => {
+    const d = document.createElement("div"); d.className = "attempt " + (a.outcome === "success" ? "good" : "bad");
+    const hd = document.createElement("div"); hd.className = "ah";
+    const b = document.createElement("b"); b.textContent = `Attempt ${a.n + 1} · ${a.source === "injected" ? "injected faulty SQL" : a.n === 0 ? "LLM" : "LLM repair"}`;
+    const o = document.createElement("span"); o.textContent = OUTCOME_TEXT[a.outcome] || a.outcome;
+    hd.append(b, o);
+    if (a.error) { const e = document.createElement("span"); e.className = "ae"; e.textContent = a.error; hd.append(e); }
+    const p = document.createElement("pre"); p.textContent = a.sql || "(no SQL returned)";
+    d.append(hd, p); box.append(d);
+  });
+  box.hidden = false;
+}
+
+// Presentation demo: three live cases taken from the test set.
+const DEMO_CASES = [["1 · Correct answer", "J3"], ["2 · Controlled repair", "R1"], ["3 · Unsupported request", "U2"]];
+async function runDemo(id) {
+  const t = TESTS.find(x => x.id === id);
+  if (!t || busy || !llmReady || !db) return;
+  $("q").value = t.q;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  setBusy(true);
+  try {
+    const rec = await runPipeline(t.q, { inject: t.inject, useCache: false });
+    const ok = autoCorrect(t, rec);
+    if (ok === null) return;
+    if (expectsRefusal(t)) log("verify", ok ? "As expected: the request was not executed." : "Not as expected: this request should have been declined or stopped.", ok ? "ok" : "err");
+    else log("verify", ok ? `Matches the reference result (${t.expectedRes.rows.length} row${t.expectedRes.rows.length === 1 ? "" : "s"}), which was fixed before any LLM run.` : "Does not match the reference result.", ok ? "ok" : "err");
+  } finally { setBusy(false); }
+}
+
+async function ask(question) {
+  if (!question.trim() || !db || busy) return;
+  setBusy(true);
+  try { await runPipeline(question, { useCache: true }); }
+  finally { setBusy(false); }
 }
 
 function runExample(ex) {
   if (busy) return;
   $("q").value = ex.q;
-  if (llmReady) { ask(ex.q); return; }
-  resetSteps(); $("log").innerHTML = "";
+  resetSteps(); $("log").innerHTML = ""; renderAttempts(null); markLinked([]);
   setStep("context", "done", `${TABLES.length} tables · ${COLCOUNT} columns`);
   setStep("generate", "skip", "saved SQL used"); setStep("repair", "skip", "not needed");
   $("explain").textContent = ex.explain; $("sql").value = ex.sql; $("sqlmeta").textContent = "saved example";
-  log("example", "Using the SQL saved with this example.");
+  log("example", "Hand-written SQL saved with this example (not generated by the LLM).");
   runSQL(ex.sql);
 }
 
 function runManual() {
   if (busy || !db) return;
-  resetSteps(); $("log").innerHTML = "";
+  resetSteps(); $("log").innerHTML = ""; renderAttempts(null); markLinked([]);
   setStep("context", "skip", "not needed"); setStep("generate", "skip", "written by hand"); setStep("repair", "skip", "manual run");
   $("explain").textContent = ""; $("sqlmeta").textContent = "edited by hand";
   log("manual", "Running your SQL.");
@@ -751,6 +1217,197 @@ $("savekey").addEventListener("click", () => { const k = $("apikey").value.trim(
 $("apikey").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("savekey").click(); } });
 $("clearkey").addEventListener("click", () => { setKey(""); refreshKeyState(); });
 
+// ---------- Evaluation run (results kept per schema mode) ----------
+const EVAL_STORE = "t2sql.eval.v2";
+let EVALS = { full: { results: {}, overrides: {} }, linked: { results: {}, overrides: {} } };
+try {
+  const s = JSON.parse(localStorage.getItem(EVAL_STORE) || "null");
+  if (s && s.full && s.linked) EVALS = s;
+  else { const old = JSON.parse(localStorage.getItem("t2sql.eval.v1") || "null"); if (old && old.results) EVALS.full = old; }   // keep results from build 2
+} catch {}
+const saveEval = () => { try { localStorage.setItem(EVAL_STORE, JSON.stringify(EVALS)); } catch {} };
+const cur = () => EVALS[schemaMode];
+
+const norm = v => v === null || v === undefined ? "NULL" : typeof v === "number" ? String(Math.round(v * 100) / 100) : String(v).trim();
+
+// Same rows as expected (multiset), row order ignored, extra columns in the generated result allowed.
+function compareResult(exp, got) {
+  if (!exp || !got) return false;
+  if (exp.rows.length !== got.rows.length || got.cols.length < exp.cols.length) return false;
+  const colSig = (rows, i) => rows.map(r => norm(r[i])).sort().join("\u0001");
+  const gs = got.cols.map((_, j) => colSig(got.rows, j));
+  const cands = exp.cols.map((_, i) => { const s = colSig(exp.rows, i); return gs.map((g, j) => g === s ? j : -1).filter(j => j >= 0); });
+  if (cands.some(c => !c.length)) return false;
+  const expKey = exp.rows.map(r => r.map(norm).join("\u0002")).sort().join("\u0003");
+  const used = new Set(), map = [];
+  const tryMap = i => {
+    if (i === exp.cols.length) return got.rows.map(r => map.map(j => norm(r[j])).join("\u0002")).sort().join("\u0003") === expKey;
+    for (const j of cands[i]) { if (used.has(j)) continue; used.add(j); map[i] = j; if (tryMap(i + 1)) return true; used.delete(j); }
+    return false;
+  };
+  return tryMap(0);
+}
+
+const isRepairTest = t => !!t.inject;
+const expectsRefusal = t => t.expect === "refuse";
+
+// true / false, or null when there is nothing to score yet (not run, stopped, LLM error)
+function autoCorrect(t, rec) {
+  if (!rec || rec.status === "stopped" || rec.status === "llm_error") return null;
+  if (expectsRefusal(t)) return rec.status === "abstained" || rec.status === "policy_stopped";
+  return rec.executed && compareResult(t.expectedRes, rec.result);
+}
+function finalCorrect(t) {
+  const o = cur().overrides[t.id];
+  if (o === "correct") return true;
+  if (o === "wrong") return false;
+  return autoCorrect(t, cur().results[t.id]);
+}
+
+const STATUS_LABEL = {
+  executed: ["Executed", "ok"], abstained: ["Declined (no SQL)", "warn"], policy_stopped: ["Stopped: policy", "warn"],
+  failed_after_repairs: ["Failed after 2 repairs", "bad"], llm_error: ["LLM error", "bad"], stopped: ["Stopped", ""]
+};
+const pill = (text, cls) => { const s = document.createElement("span"); s.className = "pill" + (cls ? " " + cls : ""); s.textContent = text; return s; };
+
+function renderEvalSummary() {
+  const E = cur();
+  const llm = TESTS.filter(t => !isRepairTest(t)), answerable = llm.filter(t => !expectsRefusal(t)), refuse = llm.filter(expectsRefusal), rep = TESTS.filter(isRepairTest);
+  const execOk = answerable.filter(t => E.results[t.id]?.executed).length;
+  const correct = list => list.filter(t => finalCorrect(t) === true).length;
+  const times = TESTS.map(t => E.results[t.id]).filter(r => r && r.status !== "stopped").map(r => r.totalMs);
+  const repFixed = rep.filter(t => E.results[t.id]?.executed).length;
+  const linkOk = answerable.filter(t => t.link?.recall).length;
+  const stats = [
+    [`${execOk} / ${answerable.length}`, "Execution success · 12 answerable questions"],
+    [`${correct(answerable)} / ${answerable.length}`, "Result correct · 12 answerable questions"],
+    [`${correct(refuse)} / ${refuse.length}`, "Unsupported or ambiguous handled (declined)"],
+    [`${repFixed} / ${rep.length}`, "Controlled repair tests executed after repair"],
+    [`${correct(rep)} / ${rep.length}`, "Controlled repair tests correct after repair"],
+    [times.length ? (times.reduce((a, b) => a + b, 0) / times.length / 1000).toFixed(1) + " s" : "–", "Mean response time per question"],
+    [`${linkOk} / ${answerable.length}`, "Schema-linking recall (rule-based, no LLM) · 12 answerable"],
+  ];
+  const box = $("evalsum"); box.innerHTML = "";
+  stats.forEach(([v, k]) => { const d = document.createElement("div"); d.className = "stat"; const a = document.createElement("div"); a.className = "v"; a.textContent = v; const b = document.createElement("div"); b.className = "k"; b.textContent = k; d.append(a, b); box.append(d); });
+  const n = TESTS.filter(t => E.results[t.id]).length;
+  $("evalmeta").textContent = `${MODE_NAME[schemaMode]} · ${n} of ${TESTS.length} run`;
+  $("evalmode").textContent = MODE_NAME[schemaMode];
+}
+
+function renderEvalTable() {
+  const E = cur();
+  const body = $("evalbody"); body.innerHTML = "";
+  let group = "";
+  TESTS.forEach(t => {
+    const g = isRepairTest(t) ? "Controlled repair tests (faulty SQL injected; not LLM test results)" : t.cat === "Simple" ? "Simple queries" : t.cat === "Join" ? "Joins" : t.cat === "Aggregation" ? "Aggregation" : "Unsupported or ambiguous requests";
+    if (g !== group) { group = g; const tr = body.insertRow(); tr.className = "group"; const td = tr.insertCell(); td.colSpan = 8; td.textContent = g; }
+    const rec = E.results[t.id];
+    const tr = body.insertRow();
+    tr.insertCell().textContent = t.id;
+    const qc = tr.insertCell(); qc.className = "q";
+    const det = document.createElement("details");
+    const sum = document.createElement("summary"); sum.textContent = t.q; det.append(sum);
+    const add = (label, text) => { const l = document.createElement("span"); l.className = "lbl"; l.textContent = label; const p = document.createElement("pre"); p.textContent = text; det.append(l, p); };
+    if (t.inject) add(`Injected faulty SQL · ${t.fault}`, t.inject);
+    if (t.ref) add("Reference SQL", t.ref);
+    if (t.expectedRes) add(`Expected result · ${t.expectedRes.rows.length} row${t.expectedRes.rows.length === 1 ? "" : "s"}`, [t.expectedRes.cols.join(" | "), ...t.expectedRes.rows.slice(0, 12).map(r => r.map(norm).join(" | "))].join("\n") + (t.expectedRes.rows.length > 12 ? "\n…" : ""));
+    if (expectsRefusal(t)) add("Expected behaviour", "Decline: return no SQL, or stop on the safety policy. " + t.why);
+    if (t.link) add("Schema linker", describeLink(t.link.result) + (t.refTables.length ? `\nTables in the reference SQL: ${t.refTables.join(", ")}` : ""));
+    if (rec) rec.attempts.forEach(a => add(`Attempt ${a.n + 1} · ${a.source === "injected" ? "injected" : "LLM"} · ${a.outcome.replace("_", " ")}${a.error ? " · " + a.error : ""}`, a.sql || "(no SQL returned)" + (rec.explanation ? "\n" + rec.explanation : "")));
+    if (rec?.expanded) add("Schema expansion", `Linked schema expanded after an unknown table/column error. Tables sent on the last attempt: ${rec.promptTables.join(", ")}`);
+    qc.append(det);
+    const lc = tr.insertCell();
+    if (t.refTables.length) lc.append(t.link.recall ? pill(`✓ ${t.link.result.tables.length} of ${TABLES.length}`, "ok") : pill("✗ missing " + t.link.missing.join(", "), "bad"));
+    else lc.append(pill("–", ""));
+    const ec = tr.insertCell();
+    if (rec) { const [txt, cls] = STATUS_LABEL[rec.status] || [rec.status, ""]; ec.append(rec.emptyResult ? pill("Executed · 0 rows", "warn") : pill(txt, cls)); } else ec.append(pill("Not run", ""));
+    const cc = tr.insertCell();
+    const fc = finalCorrect(t);
+    cc.append(fc === true ? pill("Correct", "ok") : fc === false ? pill("Wrong", "bad") : pill("–", ""));
+    if (rec) {
+      const sel = document.createElement("select"); sel.id = "ov-" + t.id; sel.setAttribute("aria-label", "Override correctness for " + t.id);
+      const ac = autoCorrect(t, rec);
+      [["auto", `Auto (${ac === true ? "correct" : ac === false ? "wrong" : "–"})`], ["correct", "Mark correct"], ["wrong", "Mark wrong"]].forEach(([v, l]) => { const o = document.createElement("option"); o.value = v; o.textContent = l; sel.append(o); });
+      sel.value = E.overrides[t.id] || "auto";
+      sel.addEventListener("change", () => { if (sel.value === "auto") delete E.overrides[t.id]; else E.overrides[t.id] = sel.value; saveEval(); renderEval(); });
+      cc.append(document.createElement("br"), sel);
+    }
+    const rc = tr.insertCell(); rc.className = "num"; rc.textContent = rec ? rec.repairs : "";
+    const tc = tr.insertCell(); tc.className = "num"; tc.textContent = rec ? (rec.totalMs / 1000).toFixed(1) : "";
+    const bc = tr.insertCell();
+    const b = document.createElement("button"); b.type = "button"; b.className = "runone"; b.textContent = rec ? "Re-run" : "Run";
+    b.addEventListener("click", () => runTests([t]));
+    bc.append(b);
+  });
+  setBusy(busy);
+}
+function renderEval() { renderEvalSummary(); renderEvalTable(); }
+
+async function runTests(list) {
+  if (busy || !llmReady) return;
+  const E = cur();   // results go to the mode that was selected when the run started
+  evalRunning = true; stopAll = false; setBusy(true);
+  try {
+    for (let i = 0; i < list.length; i++) {
+      const t = list[i];
+      $("evalnote").textContent = `Running ${t.id} (${i + 1} of ${list.length}) · ${MODE_NAME[schemaMode]}…`;
+      const rec = await runPipeline(t.q, { inject: t.inject, useCache: false });
+      rec.testId = t.id;
+      if (rec.status !== "stopped") { E.results[t.id] = rec; delete E.overrides[t.id]; saveEval(); }
+      renderEval();
+      if (stopAll || rec.status === "stopped") break;
+      if (rec.status === "llm_error" && /bad_key|no_key/.test(rec.error)) break;
+      if (i < list.length - 1) { try { await sleep(4000); } catch {} if (stopAll) break; }   // gap between questions for the free-tier limit
+    }
+    $("evalnote").textContent = stopAll ? "Stopped." : "Done. Export the results before you clear them.";
+  } finally { evalRunning = false; setBusy(false); }
+}
+
+function csvCell(v) { const s = v === null || v === undefined ? "" : String(v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+function download(name, text, type) {
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  const a = document.createElement("a"); a.href = url; a.download = name; document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+function evalRows() {
+  const E = cur();
+  return TESTS.map(t => {
+    const r = E.results[t.id], ac = autoCorrect(t, r), fc = finalCorrect(t);
+    const last = r?.attempts?.at(-1);
+    return {
+      test_id: t.id, test_type: isRepairTest(t) ? "controlled_repair" : "llm_test", category: t.cat, question: t.q,
+      schema_mode: schemaMode,
+      reference: t.ref || "(decline expected)", expected_rows: t.expectedRes ? t.expectedRes.rows.length : "",
+      ref_tables: t.refTables.join(" "), linked_tables: t.link.result.tables.join(" "),
+      link_recall_strict: t.refTables.length ? (t.link.recall ? "yes" : "no") : "",
+      injected_sql: t.inject || "", model: r?.model || "", started_at: r?.startedAt || "",
+      prompt_tables_last_attempt: r ? (r.promptTables || []).join(" ") : "", schema_expanded: r ? (r.expanded ? "yes" : "no") : "",
+      final_sql: last?.sql || "", attempts: r ? r.attempts.map(a => `#${a.n + 1} ${a.source} ${a.outcome}${a.error ? " (" + a.error + ")" : ""}: ${a.sql || "(no SQL)"}`).join(" || ") : "",
+      execution_outcome: r?.status || "not_run", execution_success: r ? (r.executed ? "yes" : "no") : "", empty_result: r ? (r.emptyResult ? "yes" : "no") : "",
+      result_correct_auto: ac === null ? "" : ac ? "yes" : "no", result_correct_final: fc === null ? "" : fc ? "yes" : "no",
+      repairs: r ? r.repairs : "", total_response_s: r ? (r.totalMs / 1000).toFixed(2) : "", rate_limit_wait_s: r ? (r.waitMs / 1000).toFixed(1) : "",
+      error: r?.error || "", model_explanation: r?.explanation || ""
+    };
+  });
+}
+$("exportcsv").addEventListener("click", () => {
+  const rows = evalRows(), cols = Object.keys(rows[0]);
+  download(`text-to-sql-evaluation-${schemaMode}.csv`, "﻿" + [cols.join(","), ...rows.map(r => cols.map(c => csvCell(r[c])).join(","))].join("\r\n"), "text/csv;charset=utf-8");
+});
+$("exportjson").addEventListener("click", () => {
+  const out = { project: "Self-Correcting Text-to-SQL over a Real-World Database Schema (Junior prototype)", build: "evaluation build 3 (optional schema linking), 22 Nov 2026",
+    database: "Harbor Goods synthetic store, SQLite (sql.js 1.10.3), fixed seed 20261030", models: MODELS, temperature: 0, maxRepairs: MAX_REPAIRS,
+    schemaMode, linker: "rule-based: table/column names, text values, business terms, shortest declared FK path; one-hop expansion on unknown table/column (Linked mode)",
+    exportedAt: new Date().toISOString(), summary: $("evalsum").innerText, rows: evalRows(), records: cur().results };
+  download(`text-to-sql-evaluation-${schemaMode}.json`, JSON.stringify(out, null, 2), "application/json");
+});
+$("runall").addEventListener("click", () => runTests(TESTS));
+$("stopall").addEventListener("click", () => { stopAll = true; ctl?.abort(); });
+$("clearrun").addEventListener("click", () => {
+  if ($("clearrun").dataset.armed !== "1") { $("clearrun").dataset.armed = "1"; $("clearrun").textContent = "Click again to clear"; setTimeout(() => { $("clearrun").dataset.armed = ""; $("clearrun").textContent = "Clear results (this mode)"; }, 3000); return; }
+  EVALS[schemaMode] = { results: {}, overrides: {} }; saveEval(); $("clearrun").dataset.armed = ""; $("clearrun").textContent = "Clear results (this mode)"; $("evalnote").textContent = "Results cleared."; renderEval();
+});
+
 // ---------- Schema rail ----------
 let TABLES = [], COLCOUNT = 0;
 function renderSchema() {
@@ -763,7 +1420,7 @@ function renderSchema() {
   TABLES.forEach((t, i) => {
     const cols = db.exec(`SELECT name, type, pk FROM pragma_table_info('${t}')`)[0].values;
     const count = db.exec(`SELECT COUNT(*) FROM ${t}`)[0].values[0][0];
-    const d = document.createElement("details"); d.className = "tbl"; d.open = i < 3;
+    const d = document.createElement("details"); d.className = "tbl"; d.open = i < 3; d.dataset.t = t;
     const s = document.createElement("summary");
     const n = document.createElement("span"); n.textContent = t;
     const c = document.createElement("span"); c.className = "c"; c.textContent = count.toLocaleString("en-US") + " rows";
@@ -782,10 +1439,11 @@ function renderSchema() {
 }
 
 function buildSampleRows() {
-  return TABLES.map(t => {
+  TABLES.forEach(t => {
     const r = db.exec(`SELECT * FROM ${t} LIMIT 3`)[0];
-    return `${t}: ${r.columns.join(" | ")}\n` + r.values.map(v => "  " + v.join(" | ")).join("\n");
-  }).join("\n");
+    SAMPLE_BY[t] = `${t}: ${r.columns.join(" | ")}\n` + r.values.map(v => "  " + v.join(" | ")).join("\n");
+  });
+  return TABLES.map(t => SAMPLE_BY[t]).join("\n");
 }
 
 // ---------- Boot ----------
@@ -793,6 +1451,12 @@ EXAMPLES.forEach(ex => {
   const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = ex.q; b.disabled = true;
   b.addEventListener("click", () => runExample(ex));
   $("examples").append(b);
+});
+DEMO_CASES.forEach(([label, id]) => {
+  const b = document.createElement("button"); b.type = "button"; b.className = "chip demochip"; b.textContent = label; b.disabled = true;
+  b.title = (TESTS.find(x => x.id === id) || {}).q || "";
+  b.addEventListener("click", () => runDemo(id));
+  $("democases").append(b);
 });
 $("askform").addEventListener("submit", e => { e.preventDefault(); ask($("q").value); });
 $("stopbtn").addEventListener("click", () => ctl?.abort());
@@ -805,6 +1469,12 @@ $("copybtn").addEventListener("click", async () => {
 ["quick", "default"].forEach(t => $("m-" + t).addEventListener("click", () => {
   tier = t;
   $("m-quick").setAttribute("aria-pressed", t === "quick"); $("m-default").setAttribute("aria-pressed", t === "default");
+}));
+["full", "linked"].forEach(m => $("s-" + m).addEventListener("click", () => {
+  if (busy) return;
+  schemaMode = m;
+  $("s-full").setAttribute("aria-pressed", m === "full"); $("s-linked").setAttribute("aria-pressed", m === "linked");
+  if (db) renderEval();
 }));
 $("askbtn").disabled = true; $("q").disabled = true; $("runbtn").disabled = true;
 
@@ -821,11 +1491,22 @@ $("askbtn").disabled = true; $("q").disabled = true; $("runbtn").disabled = true
     db.exec(built.sql);
     db.exec("PRAGMA query_only = ON;");
     DDL = built.ddl;
+    built.ddl.split("\n\n").forEach(block => { const m = block.match(/CREATE TABLE (\w+)/); if (m) DDL_BY[m[1]] = block; });
     TABLES = db.exec("SELECT name FROM sqlite_master WHERE type='table' ORDER BY rowid")[0].values.map(r => r[0]);
     COLCOUNT = TABLES.reduce((n, t) => n + db.exec(`SELECT COUNT(*) FROM pragma_table_info('${t}')`)[0].values[0][0], 0);
     SAMPLE_ROWS = buildSampleRows();
+    LINKMETA = buildLinkMeta(db, TABLES);
+    TESTS.forEach(t => {
+      if (t.ref) { const r = execute(t.ref); t.expectedRes = { cols: r.cols, rows: r.rows }; }
+      // Linking is rule-based, so its recall can be checked without calling the LLM.
+      t.refTables = t.ref ? refTables(t.ref, LINKMETA) : [];
+      const result = linkSchema(t.q, LINKMETA);
+      const missing = t.refTables.filter(x => !result.tables.includes(x));
+      t.link = { result, missing, recall: t.refTables.length > 0 && missing.length === 0 };
+    });
     $("dbtag").innerHTML = "<b>harbor_goods.db</b> · SQLite · " + TABLES.length + " tables";
     renderSchema();
+    renderEval();
     setBusy(false);
     // Open in a working state: the first example, run from its saved SQL (no API call on load)
     const ex = EXAMPLES[0];
